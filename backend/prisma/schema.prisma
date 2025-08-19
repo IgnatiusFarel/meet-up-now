@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"  
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId    String   @id @default(uuid()) @map("_id")
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+
+  // OAuth info
+  provider   String // ex: "google"
+  providerId String // Google sub id
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meetings       Meeting[]            @relation("UserMeetings")
+  participants   MeetingParticipant[]
+  chatMessages   ChatMessage[]        @relation("UserMessages")
+
+  @@map("users")
+}
+
+model Meeting {
+  meetingId   String   @id @default(uuid()) @map("_id")
+  meetingCode String   @unique
+  title       String?
+
+  ownerId String
+  owner   User   @relation("UserMeetings", fields: [ownerId], references: [userId])
+
+  createdAt DateTime @default(now())
+  endedAt   DateTime?
+
+  participants MeetingParticipant[]
+  messages      ChatMessage[]        @relation("MeetingMessages")
+
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  participantId String   @id @default(uuid()) @map("_id")
+
+  userId    String
+  meetingId String
+
+  user    User    @relation(fields: [userId], references: [userId])
+  meeting Meeting @relation(fields: [meetingId], references: [meetingId])
+
+  // status in meeting
+  isMicOn       Boolean @default(false)
+  isCameraOn    Boolean @default(false)
+  isScreenShare Boolean @default(false)
+
+  joinedAt DateTime @default(now())
+  leftAt   DateTime?
+
+  @@map("meeting_participants")
+  @@unique([userId, meetingId]) // user cuma boleh sekali per meeting
+}
+
+model ChatMessage {
+  messageId String   @id @default(uuid()) @map("_id")
+
+  meetingId String
+  senderId  String
+
+  meeting Meeting @relation("MeetingMessages", fields: [meetingId], references: [meetingId])
+  sender  User    @relation("UserMessages", fields: [senderId], references: [userId])
+
+  content   String
+  createdAt DateTime @default(now())
+
+  @@map("chat_messages")
+}

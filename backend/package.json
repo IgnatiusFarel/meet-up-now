@@ -1,0 +1,43 @@
+{
+  "name": "meetupnow-backend",
+  "version": "1.0.0",
+  "description": "Backend for MeetSpace - Video Conferencing App",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prisma": "^5.7.0"
+  },
+  "imports": {
+    "#utils/*": "./src/utils/*.js",
+    "#config/*": "./src/config/*.js",
+    "#services/*": "./src/services/*.js",
+    "#middleware/*": "./src/middleware/*.js",
+    "#controllers/*": "./src/controllers/*.js",
+    "#routes/*": "./src/routes/*.js"
+  }
+}
