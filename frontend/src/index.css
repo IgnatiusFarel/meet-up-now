@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {    
+  background-color: #f3f4f6;  
+}
+
+body {
+  font-family: "Poppins", sans-serif;  
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.custom-collapse {
+  width: 850px !important;
+  border: none !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-collapse .ant-collapse-item {
+  border: none !important;
+  margin-bottom: 8px;
+}
+
+.custom-collapse .ant-collapse-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Header Styling with Gradient */
+.custom-collapse .ant-collapse-header {
+  background: linear-gradient(135deg, #171717 0%, #4B5563 50%, #8b8e96 100%) !important;
+  color: #FFFFFF !important;
+  height: 80px !important;
+  padding: 0 20px !important;
+  border-radius: 16px 16px 0 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  font-weight: 500 !important;
+  border: none !important;
+}
+
+/* Header when collapsed (full rounded) */
+.custom-collapse .ant-collapse-item:not(.ant-collapse-item-active) .ant-collapse-header {
+  border-radius: 16px !important;
+}
+
+/* Icon Styling */
+.custom-collapse .ant-collapse-expand-icon {
+  color: #FFFFFF !important;
+  position: absolute !important;
+  right: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Content/Body Styling */
+.custom-collapse .ant-collapse-content {
+  background-color: #FDFDFD !important;
+  border: none !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+.custom-collapse .ant-collapse-content-box {
+  padding: 20px !important;
+  color: #717171 !important;
+  border-radius: 0 0 16px 16px !important;
+}
+
+/* Hover Effects */
+.custom-collapse .ant-collapse-header:hover {
+  background: linear-gradient(135deg, #262626 0%, #6B7280 50%, #D1D5DB 100%) !important;
+  transition: background 0.3s ease !important;
+}
+
+/* Focus States */
+.custom-collapse .ant-collapse-header:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.3) !important;
+  outline-offset: 2px !important;
+}
+
+
