@@ -1,46 +1,80 @@
 import { Link } from "react-router-dom";
 import { Button } from "antd";
-import ShinyText from "../../../ui/ShinyText";
 import GooeyNav from "../../../ui/GooeyNav";
-
-const items = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Features", href: "#features" },
-  { label: "FAQ", href: "#faq" },
-  { label: "Client", href: "#client" },
-];
+import useActiveSection from "../../../hooks/useActiveSection";
+import Login from "./Login";
+import { useState } from "react";
 
 const Navbar = () => {
+  const sectionIds = ["home", "client", "testimonials", "features", "faq"];
+  const { activeSectionIndex } = useActiveSection(sectionIds);
+  const [openModalLogin, setOpenModalLogin] = useState(false);
+
+  const items = [
+    { label: "Home", href: "#home" },
+    { label: "Client", href: "#client" },
+    { label: "Testimonials", href: "#testimonials" },
+    { label: "Features", href: "#features" },
+    { label: "FAQ", href: "#faq" },
+  ];
+
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navbarHeight = 90;
+      const elementPosition = element.offsetTop - navbarHeight;
+
+      window.scrollTo({
+        top: elementPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleNavClick = (index) => {
+    const sectionId = sectionIds[index];
+    scrollToSection(sectionId);
+  };
+
+  const handleLogin = () => {
+    setOpenModalLogin(true);
+  };
+
+  const handleClose = () => {
+    setOpenModalLogin(false);
+  };
+
   return (
     <header className="sticky top-0 z-50 px-10 h-[90px] flex items-center backdrop-blur">
       <div className="container mx-auto flex items-center justify-between">
-        
         {/* Left Section (Logo) */}
         <Link to="/" className="text-2xl font-bold">
-          <span className="text-black-600">Meet Up Now</span>          
+          <span className="text-black-600">Meet Up Now</span>
         </Link>
 
         {/* Center Section (GooeyNav) */}
-        <div className="hidden md:flex">
+        <nav className="hidden md:flex">
           <GooeyNav
             items={items}
             particleCount={15}
             particleDistances={[90, 10]}
             particleR={100}
-            initialActiveIndex={0}
+            initialActiveIndex={activeSectionIndex}
             animationTime={800}
             timeVariance={300}
             colors={[1, 2, 3, 1, 2, 3, 1, 4]}
+            onItemClick={handleNavClick}
           />
-        </div>
+        </nav>
 
         {/* Right Section (Buttons) */}
         <div className="flex space-x-3">
-          <Button type="primary" className="rounded-full">
+          <Button type="primary" className="rounded-full" onClick={handleLogin}>
             ✨ Try Now
-          </Button>    
+          </Button>
         </div>
+
+        <Login open={openModalLogin} onClose={handleClose} />
       </div>
     </header>
   );
