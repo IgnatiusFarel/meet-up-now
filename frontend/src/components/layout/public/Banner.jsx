@@ -17,7 +17,7 @@ const Banner = () => {
         rel="stylesheet"
       />
 
-      <main className="bg-[#FDFDFD] rounded-[10px] h-[1080px] mx-3 flex flex-col items-center justify-center text-center px-6">
+      <main className="bg-[#FDFDFD] rounded-lg h-[1080px] mx-3 flex flex-col items-center justify-center text-center px-6">
         {/* ⚡ Fast Meeting Tools */}
         <StarBorder
           color="cyan"
@@ -78,19 +78,18 @@ const Banner = () => {
           <Button type="primary">
             <ShinyText text="👉 Get Started" speed={1} />
           </Button>
-          <Button type="default">     
-            🚀   
+          <Button
+            type="default"
+            href="https://youtu.be/sUTYQIDv1rk?si=bDML7EykpM1H9I03"
+          >
+            🚀
             <GradientText
-              colors={[
-                "#c084fc",
-                "#a855f7",
-                "#9333ea",
-                "#6366f1",
-                "#60a5fa",
-              ]}
+              colors={["#c084fc", "#a855f7", "#9333ea", "#6366f1", "#60a5fa"]}
               animationSpeed={3}
-            > Explore Meet Up Now </GradientText>
-            
+            >
+              {" "}
+              Explore Meet Up Now{" "}
+            </GradientText>
           </Button>
         </div>
 
@@ -99,7 +98,7 @@ const Banner = () => {
           <img
             src={PreviewImage}
             alt="Preview"
-            className="max-w-full h-auto rounded-[10px] shadow-md"
+            className="max-w-full h-auto rounded-lg shadow-md"
           />
         </div>
       </main>
