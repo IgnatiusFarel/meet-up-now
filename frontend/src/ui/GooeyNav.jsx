@@ -9,12 +9,43 @@ const GooeyNav = ({
   timeVariance = 300,
   colors = [1, 2, 3, 1, 2, 3, 1, 4],
   initialActiveIndex = 0,
+  onItemClick 
 }) => {
   const containerRef = useRef(null);
   const navRef = useRef(null);
   const filterRef = useRef(null);
   const textRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(initialActiveIndex);
+  const isScrollingRef = useRef(false);
+
+  // Sync dengan initialActiveIndex dari parent (scroll tracking)
+  useEffect(() => {
+    console.log('GooeyNav: initialActiveIndex changed to:', initialActiveIndex, 'current activeIndex:', activeIndex, 'isScrolling:', isScrollingRef.current);
+    
+    if (initialActiveIndex !== activeIndex && !isScrollingRef.current) {
+      console.log('GooeyNav: Updating activeIndex from', activeIndex, 'to', initialActiveIndex);
+      setActiveIndex(initialActiveIndex);
+      
+      // Update position immediately for better responsiveness
+      requestAnimationFrame(() => {
+        if (navRef.current) {
+          const activeLi = navRef.current.querySelectorAll("li")[initialActiveIndex];
+          if (activeLi) {
+            updateEffectPosition(activeLi);
+            console.log('GooeyNav: Updated effect position for index', initialActiveIndex);
+          }
+        }
+      });
+    }
+  }, [initialActiveIndex]); // Only depend on initialActiveIndex
+
+  // Also add a separate effect to handle quick updates
+  useEffect(() => {
+    if (activeIndex !== initialActiveIndex && !isScrollingRef.current) {
+      console.log('GooeyNav: Quick sync - setting activeIndex to', initialActiveIndex);
+      setActiveIndex(initialActiveIndex);
+    }
+  }, [initialActiveIndex, activeIndex]);
 
   const noise = (n = 1) => n / 2 - Math.random() * n;
   const getXY = (distance, pointIndex, totalPoints) => {
@@ -22,6 +53,7 @@ const GooeyNav = ({
       ((360 + noise(8)) / totalPoints) * pointIndex * (Math.PI / 180);
     return [distance * Math.cos(angle), distance * Math.sin(angle)];
   };
+  
   const createParticle = (i, t, d, r) => {
     let rotate = noise(r / 10);
     return {
@@ -33,6 +65,7 @@ const GooeyNav = ({
       rotate: rotate > 0 ? (rotate + r / 20) * 10 : (rotate - r / 20) * 10,
     };
   };
+  
   const makeParticles = (element) => {
     const d = particleDistances;
     const r = particleR;
@@ -70,6 +103,7 @@ const GooeyNav = ({
       }, 30);
     }
   };
+  
   const updateEffectPosition = (element) => {
     if (!containerRef.current || !filterRef.current || !textRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
@@ -84,54 +118,94 @@ const GooeyNav = ({
     Object.assign(textRef.current.style, styles);
     textRef.current.innerText = element.innerText;
   };
+  
   const handleClick = (e, index) => {
+    e.preventDefault();
     const liEl = e.currentTarget;
+    
+    // Don't do anything if clicking same item
     if (activeIndex === index) return;
+    
+    console.log('Nav item clicked:', index); // Debug log
+    
+    // Set scrolling flag to prevent conflicts
+    isScrollingRef.current = true;
+    
+    // Call parent handler FIRST (for smooth scroll)
+    if (onItemClick) {
+      onItemClick(index);
+    }
+    
+    // Then update local state and animation
     setActiveIndex(index);
     updateEffectPosition(liEl);
+    
+    // Clean up particles
     if (filterRef.current) {
       const particles = filterRef.current.querySelectorAll(".particle");
-      particles.forEach((p) => filterRef.current.removeChild(p));
+      particles.forEach((p) => {
+        try {
+          filterRef.current.removeChild(p);
+        } catch {
+          // Ignore if already removed
+        }
+      });
     }
+    
+    // Update text effect
     if (textRef.current) {
       textRef.current.classList.remove("active");
-      void textRef.current.offsetWidth;
+      void textRef.current.offsetWidth; // Force reflow
       textRef.current.classList.add("active");
     }
+    
+    // Create new particles
     if (filterRef.current) {
       makeParticles(filterRef.current);
     }
+
+    // Reset scrolling flag after scroll completes (reduced timeout)
+    setTimeout(() => {
+      isScrollingRef.current = false;
+      console.log('GooeyNav: Reset isScrolling flag');
+    }, 600); // Reduced from 1000ms to 600ms
   };
+  
   const handleKeyDown = (e, index) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       const liEl = e.currentTarget.parentElement;
       if (liEl) {
-        handleClick({ currentTarget: liEl }, index);
+        handleClick({ currentTarget: liEl, preventDefault: () => {} }, index);
       }
     }
   };
+  
+  // Initial setup dan resize observer
   useEffect(() => {
     if (!navRef.current || !containerRef.current) return;
+    
     const activeLi = navRef.current.querySelectorAll("li")[activeIndex];
     if (activeLi) {
       updateEffectPosition(activeLi);
-      textRef.current?.classList.add("active");
+      if (textRef.current) {
+        textRef.current.classList.add("active");
+      }
     }
+    
     const resizeObserver = new ResizeObserver(() => {
-      const currentActiveLi =
-        navRef.current?.querySelectorAll("li")[activeIndex];
+      const currentActiveLi = navRef.current?.querySelectorAll("li")[activeIndex];
       if (currentActiveLi) {
         updateEffectPosition(currentActiveLi);
       }
     });
+    
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, [activeIndex]);
 
   return (
     <>
-      {/* This effect is quite difficult to recreate faithfully using Tailwind, so a style tag is a necessary workaround */}
       <style>
         {`
           :root {
