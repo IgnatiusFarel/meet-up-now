@@ -1,55 +1,185 @@
-import { Collapse } from "antd";
+import { Collapse, Segmented } from "antd";
 import StarBorder from "../../../ui/StarBorder";
 import BlurText from "../../../ui/BlurText";
 import FadeContent from "../../../ui/FadeContent";
 import ShinyText from "../../../ui/ShinyText";
+import { useState } from "react";
 
-const items = [
-  {
-    key: "1",
-    label: (
-      <div className="w-full text-center text-white font-medium">
-         <ShinyText text=" What makes Meet.Line different from other video conferencing tools?" speed={5} />
-      </div>
-    ),
-    children: (
-      <div className="text-center text-[#717171]">
-        <p>Ini adalah konten panel 1 dengan warna text #717171.</p>
-        <p>Background konten menggunakan warna #FDFDFD dengan border radius 16px.</p>
-      </div>
-    ),
-  },
-  {
-    key: "2",
-    label: (
-      <div className="w-full text-center text-white font-medium">
-        Panel Header 2
-      </div>
-    ),
-    children: (
-      <div className="text-center text-[#717171]">
-        <p>Konten panel 2 dengan styling yang sama.</p>
-        <p>Header menggunakan gradient dari dark ke light theme.</p>
-      </div>
-    ),
-  },
-  {
-    key: "3",
-    label: (
-      <div className="w-full text-center text-white font-medium">
-        Panel Header 3
-      </div>
-    ),
-    children: (
-      <div className="text-center text-[#717171]">
-        <p>Panel ketiga dengan konsistensi styling.</p>
-        <p>Semua corner menggunakan border radius 16px.</p>
-      </div>
-    ),
-  },
-];
+const faqData = {
+  General: [
+    {
+      key: "1",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText
+            text="What makes Meet.Line different from other video conferencing tools?"
+            speed={5}
+          />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            Meet Up Now is a modern video conferencing tool designed for ease of
+            use and productivity.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "2",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText
+            text="Can I use Meet Up Now without installing any software?"
+            speed={5}
+          />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            Yes, you can use it directly from your browser without installing
+            additional software.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "3",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText
+            text="What makes Meet Up Now different from other video conferencing tools?"
+            speed={5}
+          />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            Yes, breakout rooms allow you to split participants into smaller
+            groups.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "4",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText text="Does it integrate with calendar apps?" speed={5} />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>Yes, it works seamlessly on both iOS and Android devices.</p>
+        </div>
+      ),
+    },
+    {
+      key: "5",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText
+            text="What kind of customer support does Meet Up Now provide?"
+            speed={5}
+          />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>We offer 24/7 live chat, email, and knowledge base support.</p>
+        </div>
+      ),
+    },
+  ],
+  Features: [
+    {
+      key: "1",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText text="Does it support screen sharing?" speed={5} />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            Yes, Meet Up Now provides easy and smooth screen sharing for
+            presentations and collaboration.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "2",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText text="Can I record meetings?" speed={5} />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>You can record meetings and store them securely in the cloud.</p>
+        </div>
+      ),
+    },
+    {
+      key: "3",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText text="Is there a breakout room feature?" speed={5} />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            It is lightweight, has AI-enhanced features, and prioritizes
+            security for every meeting.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "4",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText
+            text="Does Meet Up Now work on mobile devices?"
+            speed={5}
+          />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            Meet Up Now integrates with Google Calendar and Microsoft Outlook.
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "5",
+      label: (
+        <div className="w-full text-center text-white font-medium">
+          <ShinyText text="What about chat and reactions?" speed={5} />
+        </div>
+      ),
+      children: (
+        <div className="text-center text-[#717171]">
+          <p>
+            There is an in-meeting chat and emoji reactions to keep the sessions
+            engaging.
+          </p>
+        </div>
+      ),
+    },
+  ],
+};
 
 const FAQ = () => {
+  const [category, setCategory] = useState("General");
+
   return (
     <main
       className="min-h-screen flex items-center justify-center bg-[#F3F4F6]"
@@ -78,15 +208,30 @@ const FAQ = () => {
           className="text-[44px] text-[#171717] font-medium mb-8"
         />
 
-        <FadeContent blur={true} duration={1500} easing="ease-out" initialOpacity={0}>
-         <Collapse
-  accordion={false}
-  className="custom-collapse w-full max-w-[850px]"
-  items={items}
-  expandIconPosition="end"
-  defaultActiveKey={["1"]}
-/>
+        {/* Segmented di bawah judul dengan jarak 60px */}
+        <div className="mb-[24px]">
+          <Segmented
+            options={["General", "Features"]}
+            size="large"
+            shape="round"
+            value={category}
+            onChange={setCategory}
+            className="border border-[#E9E9E9] "
+          />
+        </div>
 
+        <FadeContent
+          blur={true}
+          duration={1500}
+          easing="ease-out"
+          initialOpacity={0}
+        >
+          <Collapse
+            accordion={false}
+            className="custom-collapse w-full md:max-w-[850px] sm:max-w-[650px] space-y-4"
+            items={faqData[category]}
+            expandIconPosition="end"
+          />
         </FadeContent>
       </div>
     </main>
