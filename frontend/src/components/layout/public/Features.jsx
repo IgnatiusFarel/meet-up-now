@@ -4,10 +4,13 @@ import TextType from "../../../ui/TextType";
 import SpotlightCard from "../../../ui/SpotlightCard";
 import SplitText from "../../../ui/SplitText";
 import GradientText from "../../../ui/GradientText";
+import ArtboardImage from "../../../assets/artboard.png";
+import ChatImage from "../../../assets/chat.png";
+import ReminderImage from "../../../assets/reminder.png";
 
 const Features = () => {
   return (
-    <main className="bg-[#2B2B2B] rounded-[10px] h-[860px] mx-3 my-6 px-10 flex">
+    <main className="bg-[#2B2B2B] rounded-lg h-[860px] mx-3 my-6 px-10 flex">
       {/* Kiri */}
       <div className="w-1/2 flex flex-col h-full">
         {/* Bagian atas */}
@@ -53,9 +56,9 @@ const Features = () => {
             🔎
             <GradientText
               colors={["#3b3b3b", "#2b2b2b", "#a1866f", "#000000"]}
-              animationSpeed={1}              
+              animationSpeed={1}
             >
-               See More
+              See More
             </GradientText>
           </Button>
         </div>
@@ -63,18 +66,73 @@ const Features = () => {
 
       <div className="w-1/2 relative overflow-hidden flex flex-col gap-y-2">
         {/* Card 1: masuk ke atas 80px */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] -mt-[80px] ml-auto">
-          Hai
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] -mt-[80px] ml-auto overflow-hidden">
+          <div className="flex h-full">
+            {/* Teks di kiri */}
+            <div className="flex-1 flex flex-col justify-end  z-10 relative">
+              <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
+                Artboard
+              </h2>
+              <p className="text-base text-[#E9E9E9] max-w-[250px]">
+                Draw ideas together using real-time collaborative whiteboard.
+              </p>
+            </div>
+
+            {/* Gambar di kanan full - tanpa gap */}
+            <div className="absolute top-0 right-0 bottom-0 w-1/2">
+              <img
+                src={ArtboardImage}
+                alt="Artboard"
+                className="h-full w-full object-cover rounded-2xl"
+              />
+            </div>
+          </div>
         </SpotlightCard>
 
         {/* Card 2: normal */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] ml-auto">
-          Hai
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] ml-auto overflow-hidden">
+          <div className="flex h-full">
+            {/* Teks di kiri */}
+            <div className="flex-1 flex flex-col justify-end z-10 relative">
+              <h2 className="text-[18px] font-semibold text-[#FDFDFD]">Chat</h2>
+              <p className="text-base text-[#E9E9E9] max-w-[250px]">
+                Send messages, share files, and chat in meetings.
+              </p>
+            </div>
+
+            {/* Gambar di kanan full - tanpa gap */}
+            <div className="absolute top-0 right-0 bottom-0 w-1/2">
+              <img
+                src={ChatImage}
+                alt="Chat"
+                className="h-full w-full object-cover rounded-2xl"
+              />
+            </div>
+          </div>
         </SpotlightCard>
 
         {/* Card 3: masuk ke bawah 80px */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] mb-[-80px] ml-auto">
-          Hai
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] mb-[-80px] ml-auto overflow-hidden">
+          <div className="flex h-full">
+            {/* Teks di kiri */}
+            <div className="flex-1 flex flex-col justify-end z-15 relative">
+              <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
+                Reminder
+              </h2>
+              <p className="text-base text-[#E9E9E9] max-w-[250px] mb-10">
+                Set up a new meeting and get your meeting link.
+              </p>
+            </div>
+
+            {/* Gambar di kanan full - tanpa gap */}
+            <div className="absolute top-0 right-0 bottom-0 w-1/2">
+              <img
+                src={ReminderImage}
+                alt="Reminder"
+                className="h-full w-full object-cover rounded-2xl"
+              />
+            </div>
+          </div>
         </SpotlightCard>
       </div>
     </main>
