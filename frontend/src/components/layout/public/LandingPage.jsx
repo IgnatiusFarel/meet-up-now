@@ -1,10 +1,10 @@
 import { useEffect } from "react";
+import Navbar from "./Navbar";
 import Banner from "./Banner";
 import Client from "./Client";
-import FAQ from "./FAQ";
-import Features from "./Features";
-import Navbar from "./Navbar";
 import Testimonials from "./Testimonials";
+import Features from "./Features";
+import FAQ from "./FAQ";
 import Footer from "./Footer";
 
 const LandingPage = () => {
@@ -18,9 +18,9 @@ const LandingPage = () => {
   return (
     <>
       <Navbar />
-      {/* Wrap sections in main and ensure proper spacing */}
+
       <main>
-        <section id="home" className="min-h-screen">
+        <section id="home">
           <Banner />
         </section>
 
@@ -28,15 +28,15 @@ const LandingPage = () => {
           <Client />
         </section>
 
-        <section id="testimonials" className="min-h-screen">
+        <section id="testimonials">
           <Testimonials />
         </section>
 
-        <section id="features" className="min-h-screen">
+        <section id="features">
           <Features />
         </section>
 
-        <section id="faq" className="min-h-screen">
+        <section id="faq">
           <FAQ />
         </section>
 
