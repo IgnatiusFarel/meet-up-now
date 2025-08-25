@@ -1,9 +1,9 @@
-import LandingPage from "./components/layout/public/LandingPage";
+import Index from "./routes/Index";
 
-const App = () => {
+function App () {
   return (
     <>    
-    <LandingPage />   
+    <Index />
     </>
   );
 };
