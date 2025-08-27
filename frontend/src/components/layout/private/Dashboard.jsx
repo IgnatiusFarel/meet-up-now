@@ -8,7 +8,8 @@ import {
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; 
+import MeetUpNow from "../../../assets/MeetUpNow.png";
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState("");
@@ -70,15 +71,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 ">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-green-500 to-yellow-500 rounded-lg flex items-center justify-center">
-            <VideoCameraOutlined className="text-white text-lg" />
-          </div>
+      <header className="flex items-center justify-between px-6 border border-b-200">        
           <Link to="/" className="text-2xl font-bold">
-            <span className="text-black-600">Meet Up Now</span>
+            <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-28" />
           </Link>
-        </div>
 
         <div className="flex items-center space-x-2">
           <span className="text-lg font-medium" style={{ color: "#717171" }}>
