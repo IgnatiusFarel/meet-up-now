@@ -1,48 +1,57 @@
 const Footer = () => {
-  return (
-    <footer className="bg-[#2B2B2B] px-[40px] py-[60px] text-white">
-      <div className="flex justify-between items-start">
-        <h1 className="text-[48px] font-medium max-w-[500px]">
-          Manage Your Meeting With Meet Up Now
-        </h1>
+  const menuLinks = [
+    { href: "#home", label: "Home" },
+    { href: "#client", label: "Client" },
+    { href: "#features", label: "Features" },
+    { href: "#testimonials", label: "Testimonial" },
+    { href: "#faq", label: "FAQ" },
+  ];
 
-        <ul className="space-y-3 text-lg">
-          <p>Menu</p>
-          <li>
-            <a href="#home" className="cursor-pointer hover:text-gray-300">
-              Home
-            </a>
-          </li>
-          <li>
-            <a href="#client" className="cursor-pointer hover:text-gray-300">
-              Client
-            </a>
-          </li>
-          <li>
-            <a href="#features" className="cursor-pointer hover:text-gray-300">
-              Features
-            </a>
-          </li>
-          <li>
+  const supportLinks = [
+    { href: "/about-us", label: "About Us" },
+    { href: "/learn-more", label: "Learn More" },
+    { href: "/terms-of-use", label: "Terms of Use" },
+    { href: "/privacy-cookie", label: "Privacy and Cookie" },
+    { href: "/send-feedback", label: "Send Feedback" },
+  ];
+
+  const LinkList = ({ title, links }) => (
+    <nav aria-label={title}>
+      <h3 className="mb-3 text-lg font-semibold">{title}</h3>
+      <ul className="space-y-2 text-lg">
+        {links.map((link) => (
+          <li key={link.href}>
             <a
-              href="#testimonials"
+              href={link.href}
               className="cursor-pointer hover:text-gray-300"
             >
-              Testimonial
+              {link.label}
             </a>
           </li>
-          <li>
-            <a href="#faq" className="cursor-pointer hover:text-gray-300">
-              FAQ
-            </a>
-          </li>
-        </ul>
+        ))}
+      </ul>
+    </nav>
+  );
+
+  return (
+    <footer className="bg-[#2B2B2B] px-10 py-16 text-[#FDFDFD]">
+      {/* Top Section */}
+      <div className="flex justify-between flex-wrap gap-12">
+        <h1 className="text-4xl md:text-5xl font-medium max-w-lg">
+          Manage Your Meeting With Meet Up Now
+        </h1>
+        <div className="flex gap-16">
+          <LinkList title="Menu" links={menuLinks} />
+          <LinkList title="Support" links={supportLinks} />
+        </div>
       </div>
 
-      <div className="my-[60px] border-t border-gray-500" />
+      {/* Divider */}
+      <hr className="my-16 border-gray-500" />
 
-      <div className="text-center">
-        <h2 className="text-[250px] font-medium leading-none text-[#525252]">
+      {/* Branding - Full Width Text */}
+      <div className="text-center -mx-10">
+        <h2 className="text-[13vw] sm:text-[14vw] md:text-[14vw] lg:text-[12vw] xl:text-[15vw] font-medium leading-none text-[#525252] px-4">
           Meet Up Now
         </h2>
       </div>
