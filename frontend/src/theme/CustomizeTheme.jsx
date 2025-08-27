@@ -33,6 +33,12 @@ export default function ThemeProvider({ children }) {
             itemColor: "#717171",
             itemActiveBg: "#F3F4F6",
             borderRadius: 12
+          },
+          Select: {
+            controlHeight: 60, 
+            optionSelectedBg: "#DFDFDF",
+            optionLineHeight: 1.5,
+            borderRadius: 20
           }
         },
       }}
