@@ -1,6 +1,16 @@
 import { Button, Modal } from "antd";
+import MeetUpNow from "../../../assets/MeetUpNow.png";
 
 const Login = ({ open, onClose }) => {
+
+  // const handleLogin = () => {
+  //   try {
+      
+  //   } catch (error) {
+      
+  //   }
+  // }
+
   return (
     <Modal 
       centered 
@@ -9,11 +19,15 @@ const Login = ({ open, onClose }) => {
       footer={null} 
       width={400}
     >
-      <h1 className="text-2xl font-bold text-black-600">Meet Up Now</h1>
+      <div className="flex items-center mb-4">
+      <h1 className="text-2xl font-bold text-black-600">
+        <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-20" />
+      </h1>
 
-      <h2 className="text-[28px] font-medium mb-4">
+      <h2 className="text-[28px] font-medium">
         Log to your account
       </h2>
+      </div>
 
       <Button 
         type="default" 
@@ -29,7 +43,7 @@ const Login = ({ open, onClose }) => {
         Continue with Google
       </Button>
 
-      <p className="text-[#717171] mt-12 text-sm">
+      <p className="text-[#717171] mt-8 text-sm">
         By proceeding, you agree to our Terms of Use and confirm you have 
         read our Privacy and Cookie Statement.
       </p>
