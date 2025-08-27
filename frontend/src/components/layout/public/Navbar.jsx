@@ -4,6 +4,7 @@ import GooeyNav from "../../../ui/GooeyNav";
 import useActiveSection from "../../../hooks/useActiveSection";
 import Login from "./Login";
 import { useState } from "react";
+import MeetUpNow from "../../../assets/MeetUpNow.png";
 
 const Navbar = () => {
   const sectionIds = ["home", "client", "testimonials", "features", "faq"];
@@ -49,11 +50,11 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between">
         {/* Left Section (Logo) */}
         <Link to="/" className="text-2xl font-bold">
-          <span className="text-black-600">Meet Up Now</span>
+          <img src={MeetUpNow} alt="Meet Up Now Logo"   className="w-16 sm:w-20 md:w-24 lg:w-28" />
         </Link>
 
         {/* Center Section (GooeyNav) */}
-        <nav className="hidden md:flex">
+        <nav className="hidden lg:flex">
           <GooeyNav
             items={items}
             particleCount={15}
