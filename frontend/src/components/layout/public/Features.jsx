@@ -1,12 +1,12 @@
-import StarBorder from "../../../ui/StarBorder";
 import { Button } from "antd";
-import TextType from "../../../ui/TextType";
-import SpotlightCard from "../../../ui/SpotlightCard";
-import SplitText from "../../../ui/SplitText";
-import GradientText from "../../../ui/GradientText";
-import ArtboardImage from "../../../assets/artboard.png";
-import ChatImage from "../../../assets/chat.png";
-import ReminderImage from "../../../assets/reminder.png";
+import TextType from "@/ui/TextType";
+import SplitText from "@/ui/SplitText";
+import StarBorder from "@/ui/StarBorder";
+import ChatImage from "@/assets/chat.png";
+import GradientText from "@/ui/GradientText";
+import SpotlightCard from "@/ui/SpotlightCard";
+import ArtboardImage from "@/assets/artboard.png";
+import ReminderImage from "@/assets/reminder.png";
 
 const Features = () => {
   return (
@@ -24,7 +24,7 @@ const Features = () => {
           </StarBorder>
           <SplitText
             text="All The Features You Need"
-            className="text-[#FDFDFD] font-medium text-[44px] mt-4"
+            className="text-[#FDFDFD] font-medium sm:text-[38px] md:text-[44px] lg:text-[44px] mt-4"
             delay={50}
             duration={0.5}
             ease="power3.out"
@@ -66,28 +66,28 @@ const Features = () => {
 
       <div className="w-1/2 relative overflow-hidden flex flex-col gap-y-2">
         {/* Card 1: masuk ke atas 80px */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] -mt-[80px] ml-auto overflow-hidden">
-          <div className="flex h-full">
-            {/* Teks di kiri */}
-            <div className="flex-1 flex flex-col justify-end  z-10 relative">
-              <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
-                Artboard
-              </h2>
-              <p className="text-base text-[#E9E9E9] max-w-[250px]">
-                Draw ideas together using real-time collaborative whiteboard.
-              </p>
-            </div>
-
-            {/* Gambar di kanan full - tanpa gap */}
-            <div className="absolute top-0 right-0 bottom-0 w-1/2">
-              <img
-                src={ArtboardImage}
-                alt="Artboard"
-                className="h-full w-full object-cover rounded-2xl"
-              />
-            </div>
-          </div>
-        </SpotlightCard>
+<SpotlightCard className="w-full max-w-[615px] h-[330px] md:h-[330px] -mt-[80px] ml-auto overflow-hidden">
+  <div className="flex flex-col md:flex-row h-full">
+    {/* Gambar - di atas pada mobile/tablet, di kanan pada desktop */}
+    <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
+      <img
+        src={ArtboardImage}
+        alt="Artboard"
+        className="h-full w-full object-cover rounded-2xl"
+      />
+    </div>
+    
+    {/* Teks - tetap di bawah untuk semua mode */}
+    <div className="flex-1 flex flex-col justify-end z-10 relative md:px-0 md:pb-0">
+      <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
+        Artboard
+      </h2>
+      <p className="text-base text-[#E9E9E9] max-w-[250px] md:max-w-[250px]">
+        Draw ideas together using real-time collaborative whiteboard.
+      </p>
+    </div>
+  </div>
+</SpotlightCard>
 
         {/* Card 2: normal */}
         <SpotlightCard className="w-full max-w-[615px] h-[330px] ml-auto overflow-hidden">
