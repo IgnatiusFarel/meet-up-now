@@ -1,4 +1,4 @@
-import { Button, Input, Carousel, Avatar, Dropdown } from "antd";
+import { Button, Input, Carousel, Avatar } from "antd";
 import {
   VideoCameraOutlined,
   CalendarOutlined,
@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
 import { useEffect, useState } from "react"; 
-import MeetUpNow from "../../../assets/MeetUpNow.png";
+import MeetUpNow from "@/assets/MeetUpNow.png";
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState("");
@@ -73,7 +73,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex items-center justify-between px-6 border border-b-200">        
           <Link to="/" className="text-2xl font-bold">
-            <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-28" />
+            <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-16 sm:w-20 md:w-24 lg:w-28" />
           </Link>
 
         <div className="flex items-center space-x-2">
@@ -101,7 +101,7 @@ const Dashboard = () => {
           <Avatar
             className="bg-blue-600 cursor-pointer"
             icon={<UserOutlined />}
-            size={48}
+            size={42}
           />
         </div>
       </header>
@@ -112,22 +112,21 @@ const Dashboard = () => {
         <div className="flex-1 flex items-center px-16">
           <div className="max-w-xl">
             <h1 className="text-5xl font-normal text-gray-800 leading-tight mb-6">
-              Rapat dan panggilan video untuk semua orang
+              Meetings and video calls for everyone
             </h1>
             <p className="text-lg text-gray-600 mb-12 leading-relaxed">
-              Terhubung, berkolaborasi, dan merayakan dari mana saja dengan
-              Google Meet
+              Connect, collaborate, and celebrate from anywhere with Meet Up Now
             </p>
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-4 mb-8">
               <Button type="primary" size="large">
-                🎥 Rapat baru
+                🎥 New Meeting
               </Button>
 
               <div className="flex items-center space-x-2">
                 <Input
-                  placeholder="🔐 Input the room code"
+                  placeholder="🔐 Enter the room code"
                   className="w-64 h-12"
                   size="large"
                 />
@@ -137,7 +136,7 @@ const Dashboard = () => {
                   shape="round"
                   className="font-medium"
                 >
-                  Gabung
+                  Join
                 </Button>
               </div>
             </div>
@@ -147,7 +146,7 @@ const Dashboard = () => {
 
             <div className="flex gap-1">
               <a href="#" className="text-blue-500 underline text-sm">
-                Pelajari lebih lanjut
+                Learn More
               </a>
               <p className="text-gray-500 text-sm">Meet Up Now</p>
             </div>
