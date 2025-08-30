@@ -1,11 +1,11 @@
 import { Button } from "antd";
-import StarBorder from "../../../ui/StarBorder";
 import { useRef } from "react";
-import VariableProximity from "../../../ui/VariableProximity";
-import ShinyText from "../../../ui/ShinyText";
-import TextType from "../../../ui/TextType";
-import PreviewImage from "../../../assets/preview.png";
-import GradientText from "../../../ui/GradientText";
+import TextType from "@/ui/TextType";
+import ShinyText from "@/ui/ShinyText";
+import StarBorder from "@/ui/StarBorder";
+import GradientText from "@/ui/GradientText";
+import PreviewImage from "@/assets/preview.png";
+import VariableProximity from "@/ui/VariableProximity";
 
 const Banner = () => {
   const containerRef = useRef(null);
@@ -17,7 +17,7 @@ const Banner = () => {
         rel="stylesheet"
       />
 
-      <main className="bg-[#FDFDFD] rounded-lg h-[1080px] mx-3 flex flex-col items-center justify-center text-center px-6">
+       <main className="bg-[#FDFDFD] rounded-lg min-h-screen mx-3 flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-12 sm:pt-16 md:pt-20 lg:pt-24">
         {/* ⚡ Fast Meeting Tools */}
         <StarBorder
           color="cyan"
