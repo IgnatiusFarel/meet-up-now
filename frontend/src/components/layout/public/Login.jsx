@@ -1,5 +1,5 @@
 import { Button, Modal } from "antd";
-import MeetUpNow from "../../../assets/MeetUpNow.png";
+import MeetUpNow from "@/assets/MeetUpNow.png";
 
 const Login = ({ open, onClose }) => {
 
