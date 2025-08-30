@@ -14,7 +14,7 @@ const StarBorder = ({
       style={{
         padding: `${thickness}px 0`,
           cursor: "default",
-    pointerEvents: "none",
+          pointerEvents: "none",
         ...rest.style,
       }}
       {...rest}
