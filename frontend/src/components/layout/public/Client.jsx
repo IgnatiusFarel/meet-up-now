@@ -1,5 +1,5 @@
-import Squares from "../../../ui/Squares";
-import LogoLoop from "../../../ui/LogoLoop";
+import Squares from "@/ui/Squares";
+import LogoLoop from "@/ui/LogoLoop";
 
 const imageLogos = [
   {
