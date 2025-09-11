@@ -1,29 +1,32 @@
-import { Button, Input, Carousel, Avatar, message } from "antd";
-import {
-  VideoCameraOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
-import { Link, useNavigate } from "react-router-dom";
+import "dayjs/locale/en";
 import dayjs from "dayjs";
-import "dayjs/locale/id";
+import {
+  TeamOutlined,
+  UserOutlined,
+  CalendarOutlined,
+  VideoCameraOutlined,
+} from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import MeetUpNow from "@/assets/MeetUpNow.png";
 import useAuthStore from "@/stores/AuthStore";
+import useMeetingStore from "@/stores/MeetingStore";
+import MeetUpNow from "@/assets/MeetUpNow.png";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Input, Carousel, Avatar, message } from "antd";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+
   const user = useAuthStore((state) => state.user); 
   const logout = useAuthStore((state) => state.logout);
-  const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
   const isLoading = useAuthStore((state) => state.isLoading);
-  const navigate = useNavigate();
-  const [currentTime, setCurrentTime] = useState("");
-  const [loading, setLoading] = useState(false);
-
+  const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
+  const createMeeting = useMeetingStore((state) => state.createMeeting); 
+  
   useEffect(() => {
-    // Set locale to Indonesian
-    dayjs.locale("id");
+    // Detect to set locale to computer user (hour and date user local time)
+    dayjs.locale("en");
 
     const updateTime = () => {
       const now = dayjs();
@@ -74,31 +77,29 @@ const Dashboard = () => {
     }
   };
 
-  const handleNewMeeting = () => {
-    try {
-      setLoading(true); 
+ const handleNewMeeting = async () => {
+  try {
+    setLoading(true);
 
-      
-    } catch (error) {
-      message.error(error.message || 'Failed to start meeting. Please try again.');
-      console.error('Failed to create meeting:', error);
-    } finally{
-      setLoading(false);
-    }
+    // contoh meeting title default, bisa diganti pakai modal input
+    const title = "New Meeting " + dayjs().format("YYYY-MM-DD HH:mm");
+
+    // panggil createMeeting dari store
+    const newMeeting = await createMeeting(title);
+
+    message.success("Meeting berhasil dibuat 🎉");
+
+    // setelah create, arahkan user ke halaman meeting room
+    navigate(`/preview/${newMeeting.meetingCode}`);
+  } catch (error) {
+    message.error(error.message || "Gagal membuat meeting");
+    console.error("Failed to create meeting:", error);
+  } finally {
+    setLoading(false);
   }
+};
 
-  // Show loading state while fetching user
-  if (isLoading && !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading user data...</p>
-        </div>
-      </div>
-    );
-  }
-
+  
   const contentStyle = {
     height: "400px",
     display: "flex",
@@ -149,21 +150,7 @@ const Dashboard = () => {
         <div className="flex items-center space-x-2">
           <span className="text-lg font-medium" style={{ color: "#717171" }}>
             {currentTime}
-          </span>
-          <Button
-            type="text"
-            icon="ⓘ"
-            className="text-gray-600"
-            shape="circle"
-            title="Information"
-          />
-          <Button
-            type="text"
-            icon="⚙️"
-            className="text-gray-600"
-            shape="circle"
-            title="Settings"
-          />
+          </span>         
           
           {/* User Section */}
           <div className="flex items-center space-x-3">
