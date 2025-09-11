@@ -78,12 +78,13 @@ const Client = () => {
   return (
     <section className="relative w-full h-[280px] flex items-center justify-center bg-black text-white overflow-hidden -mt-[150px]">
       <header className="absolute top-1/2 left-1/2 z-30 transform -translate-x-1/2 -translate-y-1/2 text-center">
-        {" "}
-        <h2 className="text-[44px] font-medium">Our Trusted Clients</h2>{" "}
+        <h2 className="text-[28px] sm:text-[44px] font-medium">
+          Our Trusted Clients
+        </h2>
       </header>
       {/* LogoLoop Container - Perfectly centered */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <div className="w-full flex flex-col items-center justify-center h-full md:space-y-16 sm:space-y-24">
+        <div className="w-full flex flex-col items-center justify-center h-full space-y-16 md:space-y-16 sm:space-y-24">
           {/* Logo Loop pertama - arah kiri */}
           <div className="h-[70px] w-full relative overflow-hidden">
             <LogoLoop
