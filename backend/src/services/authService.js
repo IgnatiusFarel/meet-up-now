@@ -1,22 +1,22 @@
-import { PrismaClient } from '@prisma/client';
-import { JWTUtils } from '#utils/jwt';
-import { googleOAuthConfig } from '#config/oauth';
+import { JWTUtils } from "#utils/jwt";
+import { PrismaClient } from "@prisma/client";
+import { googleOAuthConfig } from "#config/oauth";
 
 const prisma = new PrismaClient();
 
 export class AuthService {
   static async exchangeCodeForTokens(code) {
     try {
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           client_id: googleOAuthConfig.clientId,
           client_secret: googleOAuthConfig.clientSecret,
           code,
-          grant_type: 'authorization_code',
+          grant_type: "authorization_code",
           redirect_uri: googleOAuthConfig.redirectUri,
         }),
       });
@@ -28,7 +28,7 @@ export class AuthService {
 
       return await tokenResponse.json();
     } catch (error) {
-      console.error('Token exchange error:', error);
+      console.error("Token exchange error:", error);
       throw new Error(`Token exchange failed: ${error.message}`);
     }
   }
@@ -46,59 +46,71 @@ export class AuthService {
 
       return await userResponse.json();
     } catch (error) {
-      console.error('Get user info error:', error);
+      console.error("Get user info error:", error);
       throw new Error(`Failed to get user info: ${error.message}`);
     }
   }
 
   static async findOrCreateUser(googleUserData) {
+    const { id: providerId, email, name, picture: avatarUrl } = googleUserData;
+
     try {
-      const { id: providerId, email, name, picture: avatarUrl } = googleUserData;
+      const user = await prisma.$transaction(async (tx) => {
+        // Cek apakah user sudah ada
+        let existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email },
+              {
+                AND: [{ provider: "google" }, { providerId }],
+              },
+            ],
+          },
+        });
 
-      // Cek apakah user sudah ada
-      let user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email },
-            { 
-              AND: [
-                { provider: 'google' },
-                { providerId }
-              ]
-            }
-          ]
+        if (existingUser) {
+          // Update user info jika ada perubahan
+          const needsUpdate =
+            existingUser.name !== name ||
+            existingUser.avatarUrl !== avatarUrl ||
+            existingUser.provider !== "google" ||
+            existingUser.providerId !== providerId;
+
+          if (needsUpdate) {
+            return await tx.user.update({
+              where: { userId: existingUser.userId },
+              data: {
+                name,
+                avatarUrl,
+                provider: "google",
+                providerId,
+                lastLoginAt: new Date(),
+                updatedAt: new Date(),
+              },
+            });
+          }
+          return await tx.user.update({
+            where: { userId: existingUser.userId },
+            data: { lastLoginAt: new Date(), updatedAt: new Date() },
+          });
         }
-      });
 
-      if (user) {
-        // Update user info jika ada perubahan
-        user = await prisma.user.update({
-          where: { userId: user.userId },
+        return await tx.user.create({
           data: {
             email,
             name,
             avatarUrl,
-            provider: 'google',
+            provider: "google",
             providerId,
-            updatedAt: new Date()
-          }
+            emailVerified: true,
+            lastLoginAt: new Date(),
+          },
         });
-      } else {
-        // Buat user baru
-        user = await prisma.user.create({
-          data: {
-            email,
-            name,
-            avatarUrl,
-            provider: 'google',
-            providerId
-          }
-        });
-      }
-
+      });
+      console.error(`User ${user.email} logged in successfully`);
       return user;
     } catch (error) {
-      console.error('Database operation error:', error);
+      console.error("Database operation error:", error);
       throw new Error(`Database operation failed: ${error.message}`);
     }
   }
@@ -107,11 +119,15 @@ export class AuthService {
     const payload = {
       userId: user.userId,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role: user.role || "user",
     };
 
     const accessToken = JWTUtils.generateAccessToken(payload);
-    const refreshToken = JWTUtils.generateRefreshToken({ userId: user.userId });
+    const refreshToken = JWTUtils.generateRefreshToken({
+      userId: user.userId,
+      tokenVersion: user.tokenVersion || 0,
+    });
 
     return { accessToken, refreshToken };
   }
@@ -119,36 +135,61 @@ export class AuthService {
   static async refreshAccessToken(refreshToken) {
     try {
       const decoded = JWTUtils.verifyRefreshToken(refreshToken);
-      
+
       const user = await prisma.user.findUnique({
         where: { userId: decoded.userId },
         select: {
           userId: true,
           email: true,
           name: true,
-          avatarUrl: true
-        }
+          avatarUrl: true,
+          role: true,
+          tokenVersion: true,
+          isActive: true,
+        },
       });
 
-      if (!user) {
-        throw new Error('User not found');
+      if (!user || !user.isActive) {
+        throw new Error("User not found or inactive.");
+      }
+
+      if (user.tokenVersion !== decoded.tokenVersion) {
+        throw new Error("Token has been revoked.");
       }
 
       const payload = {
         userId: user.userId,
         email: user.email,
-        name: user.name
+        name: user.name,
+        role: user.role,
       };
 
       const newAccessToken = JWTUtils.generateAccessToken(payload);
-      
-      return { 
-        accessToken: newAccessToken, 
-        user 
+
+      return {
+        accessToken: newAccessToken,
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+        },
       };
     } catch (error) {
-      console.error('Refresh token error:', error);
+      console.error("Refresh token error:", error);
       throw new Error(`Token refresh failed: ${error.message}`);
+    }
+  }
+
+  static async revokeUserTokens(userId) {
+    try {
+      await prisma.user.update({
+        where: { userId },
+        data: { tokenVersion: { increment: 1 } },
+      });
+    } catch (error) {
+      console.error("Revoke tokens error:", error);
+      throw new Error("Failed to revoke tokens");
     }
   }
 
@@ -162,19 +203,22 @@ export class AuthService {
           name: true,
           avatarUrl: true,
           provider: true,
+          role: true,
           createdAt: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+          lastLoginAt: true,
+          isActive: true,
+        },
       });
 
-      if (!user) {
-        throw new Error('User not found');
+      if (!user || !user.isActive) {
+        throw new Error("User not found or inactive.");
       }
 
       return user;
     } catch (error) {
-      console.error('Get user error:', error);
-      throw new Error(`Failed to get user: ${error.message}`);
+      console.error("Get user error:", error);
+      throw new Error(`Failed to retrieve user: ${error.message}`);
     }
   }
 }
