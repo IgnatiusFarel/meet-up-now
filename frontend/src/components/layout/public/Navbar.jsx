@@ -1,5 +1,5 @@
-import Login from "./Login";
 import { Button } from "antd";
+import Login from "./auth/Login";
 import { useState } from "react";
 import GooeyNav from "@/ui/GooeyNav";
 import { Link } from "react-router-dom";
@@ -46,11 +46,11 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 px-10 h-[90px] flex items-center backdrop-blur">
+    <header className="sticky top-0 z-50 px-2 sm:px-10 h-[90px] flex items-center backdrop-blur">
       <div className="container mx-auto flex items-center justify-between">
         {/* Left Section (Logo) */}
         <Link to="/" className="text-2xl font-bold">
-          <img src={MeetUpNow} alt="Meet Up Now Logo"   className="w-16 sm:w-20 md:w-24 lg:w-28" />
+          <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-16 sm:w-20 md:w-24 lg:w-28" />
         </Link>
 
         {/* Center Section (GooeyNav) */}
