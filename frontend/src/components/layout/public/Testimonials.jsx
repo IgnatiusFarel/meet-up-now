@@ -62,22 +62,25 @@ const items = testimonials.map((t, idx) => ({
 const Testimonials = () => {
   return (
     <>
-      <div className="bg-[#FDFDFD] pt-[60px] px-10">
-        <StarBorder
-          color="cyan"
-          speed="3s"
-          backgroundClass="bg-white text-[#0065FD] border border-[#E9E9E9]"
-        >
-          🗣️ Testimonials 🗣️
-        </StarBorder>
+      <div className="bg-[#FDFDFD] pt-[40px] sm:pt-[60px] px-10">
+        {/* StarBorder - center on mobile, keep original position on larger screens */}
+        <div className="flex sm:block justify-center">
+          <StarBorder
+            color="cyan"
+            speed="3s"
+            backgroundClass="bg-white text-[#0065FD] border border-[#E9E9E9]"
+          >
+            🗣️ Testimonials 🗣️
+          </StarBorder>
+        </div>
 
-        {/* Main content with justify-between layout */}
-        <div className="flex justify-between items-start mt-4 gap-8">
+        {/* Main content - responsive layout */}
+        <div className="flex flex-col sm:flex-row sm:justify-between items-center sm:items-start mt-4 sm:gap-8">
           {/* Left side - SplitText */}
-          <div className="flex-1">
+          <div className="flex-1 flex justify-center sm:justify-start">
             <SplitText
               text="What People Are Saying"
-              className="text-[#171717] font-medium text-[44px] max-w-[360px]"
+              className="text-[#171717] font-medium text-[28px] sm:text-[44px] text-center sm:text-left max-w-[360px]"
               delay={50}
               duration={0.5}
               ease="power3.out"
@@ -88,8 +91,8 @@ const Testimonials = () => {
           </div>
 
           {/* Right side - TextType and Button */}
-          <div className="flex-1 flex flex-col items-end">
-            <div className="max-w-lg text-right mt-4">
+          <div className="flex-1 flex flex-col items-center sm:items-end">
+            <div className="max-w-lg text-center sm:text-right mt-4">
               <TextType
                 text={[
                   "From setup to execution, meet up now delivers — here's what people are saying after switching from other platforms they used before.",
