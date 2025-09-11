@@ -1,6 +1,6 @@
-import { AuthService } from "#services/authService";
 import { ApiResponse } from "#utils/response";
 import { googleOAuthConfig } from "#config/oauth";
+import { AuthService } from "#services/authService";
 
 export class AuthController {
   static async getAuthUrl(req, res) {
@@ -12,7 +12,7 @@ export class AuthController {
         .json(
           ApiResponse.success(
             { authUrl },
-            "Google OAuth URL generated successfully"
+            "Google OAuth URL generated successfully!"
           )
         );
     } catch (error) {
@@ -20,13 +20,12 @@ export class AuthController {
       return res
         .status(500)
         .json(
-          ApiResponse.error("Failed to generate auth URL", 500, error.message)
+          ApiResponse.error("Failed to generate auth URL!", 500, error.message)
         );
     }
   }
 
-  // Alternative: Return JSON instead of redirect
-  // Perbaiki AuthController.googleCallback dengan logging
+  // Alternative: Return JSON instead of redirect // Perbaiki AuthController.googleCallback dengan logging
   static async googleCallback(req, res) {
     try {
       console.log("🔄 Google callback received:", req.query);
@@ -85,7 +84,7 @@ export class AuthController {
       if (!refreshToken) {
         return res
           .status(401)
-          .json(ApiResponse.unauthorized("Refresh token is required"));
+          .json(ApiResponse.unauthorized("Refresh token is required!"));
       }
 
       const result = await AuthService.refreshAccessToken(refreshToken);
@@ -96,7 +95,7 @@ export class AuthController {
             user: result.user,
             accessToken: result.accessToken,
           },
-          "Token refreshed successfully"
+          "Token refreshed successfully!"
         )
       );
     } catch (error) {
@@ -107,7 +106,7 @@ export class AuthController {
 
       return res
         .status(401)
-        .json(ApiResponse.unauthorized("Invalid or expired refresh token"));
+        .json(ApiResponse.unauthorized("Invalid or expired refresh token!"));
     }
   }
 
@@ -118,12 +117,12 @@ export class AuthController {
 
       return res
         .status(200)
-        .json(ApiResponse.success(null, "Logout successful"));
+        .json(ApiResponse.success(null, "Logout successfully!"));
     } catch (error) {
       console.error("Logout error:", error);
       return res
         .status(500)
-        .json(ApiResponse.error("Logout failed", 500, error.message));
+        .json(ApiResponse.error("Logout failed!", 500, error.message));
     }
   }
 
@@ -133,14 +132,14 @@ export class AuthController {
       return res
         .status(200)
         .json(
-          ApiResponse.success(req.user, "User profile retrieved successfully")
+          ApiResponse.success(req.user, "User profile retrieved successfully!")
         );
     } catch (error) {
       console.error("Get me error:", error);
       return res
         .status(500)
         .json(
-          ApiResponse.error("Failed to get user profile", 500, error.message)
+          ApiResponse.error("Failed to get user profile!", 500, error.message)
         );
     }
   }
