@@ -1,18 +1,25 @@
-import { Button, Input, Carousel, Avatar } from "antd";
+import { Button, Input, Carousel, Avatar, message } from "antd";
 import {
   VideoCameraOutlined,
   CalendarOutlined,
   UserOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
-import { useEffect, useState } from "react"; 
+import { useEffect, useState } from "react";
 import MeetUpNow from "@/assets/MeetUpNow.png";
+import useAuthStore from "@/stores/AuthStore";
 
 const Dashboard = () => {
+  const user = useAuthStore((state) => state.user); 
+  const logout = useAuthStore((state) => state.logout);
+  const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Set locale to Indonesian
@@ -32,6 +39,65 @@ const Dashboard = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    // Debug user data structure
+    console.log("Dashboard user data:", {
+      hasUser: !!user,
+      user: user,
+      email: user?.email,
+      avatarUrl: user?.avatarUrl,
+      userKeys: user ? Object.keys(user) : null
+    });
+
+    if (!user) {
+      console.log("User kosong di store, memanggil /auth/me...");
+      getCurrentUser().catch((error) => {
+        console.error("Error getting current user:", error);
+      });
+    }
+  }, [user, getCurrentUser]);
+
+  // Enhanced logout handler
+  const handleLogout = async () => {
+    try {
+      console.log("Starting logout process...");
+      await logout();
+      
+      // Redirect to home page after logout
+      navigate("/", { replace: true });
+      console.log("Logout successful, redirected to home");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if logout API fails, still redirect
+      navigate("/", { replace: true });
+    }
+  };
+
+  const handleNewMeeting = () => {
+    try {
+      setLoading(true); 
+
+      
+    } catch (error) {
+      message.error(error.message || 'Failed to start meeting. Please try again.');
+      console.error('Failed to create meeting:', error);
+    } finally{
+      setLoading(false);
+    }
+  }
+
+  // Show loading state while fetching user
+  if (isLoading && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
 
   const contentStyle = {
     height: "400px",
@@ -71,10 +137,14 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 border border-b-200">        
-          <Link to="/" className="text-2xl font-bold">
-            <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-16 sm:w-20 md:w-24 lg:w-28" />
-          </Link>
+      <header className="flex items-center justify-between px-6">
+        <Link to="/" className="text-2xl font-bold">
+          <img
+            src={MeetUpNow}
+            alt="Meet Up Now Logo"
+            className="w-16 sm:w-20 md:w-24 lg:w-28"
+          />
+        </Link>
 
         <div className="flex items-center space-x-2">
           <span className="text-lg font-medium" style={{ color: "#717171" }}>
@@ -82,27 +152,65 @@ const Dashboard = () => {
           </span>
           <Button
             type="text"
-            icon="Ⓘ"
+            icon="ⓘ"
             className="text-gray-600"
             shape="circle"
+            title="Information"
           />
           <Button
             type="text"
             icon="⚙️"
             className="text-gray-600"
             shape="circle"
+            title="Settings"
           />
-          <div className="flex flex-col">
-            <p>emailuser@gmail.com</p>
-            <Button type="text" size="small" danger>
-              Logout
-            </Button>
+          
+          {/* User Section */}
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-col text-right">
+              <p className="text-sm font-medium text-gray-800">
+                {user?.email || "Loading..."}
+              </p>
+              <p className="text-xs text-gray-500">
+                {user?.name || "User"}
+              </p>
+            </div>
+            
+            <div className="relative group">
+              <Avatar
+                className="bg-blue-500 cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-blue-300"
+                size={42}
+                src={user?.avatarUrl}
+                icon={<UserOutlined />}
+                alt={user?.name || "User Avatar"}
+              />
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="p-3 border-b">
+                  <p className="font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
+                </div>
+                <div className="py-2">
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                    onClick={() => console.log("Profile clicked")}
+                  >
+                    <UserOutlined className="mr-2" />
+                    Profile
+                  </button>
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    onClick={handleLogout}
+                    disabled={isLoading}
+                  >
+                    <span className="mr-2">🚪</span>
+                    {isLoading ? "Logging out..." : "Logout"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <Avatar
-            className="bg-blue-600 cursor-pointer"
-            icon={<UserOutlined />}
-            size={42}
-          />
         </div>
       </header>
 
@@ -120,7 +228,12 @@ const Dashboard = () => {
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-4 mb-8">
-              <Button type="primary" size="large">
+              <Button 
+                type="primary" 
+                size="large"
+                className="flex items-center gap-2"
+                onClick={handleNewMeeting}
+              >
                 🎥 New Meeting
               </Button>
 
@@ -134,7 +247,8 @@ const Dashboard = () => {
                   type="text"
                   size="large"
                   shape="round"
-                  className="font-medium"
+                  className="font-medium hover:bg-blue-50 hover:text-blue-600"
+                  onClick={() => console.log("Join clicked")}
                 >
                   Join
                 </Button>
@@ -142,13 +256,20 @@ const Dashboard = () => {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-500 my-8"></div>
+            <div className="border-t border-gray-300 my-8"></div>
 
-            <div className="flex gap-1">
-              <a href="#" className="text-blue-500 underline text-sm">
+            <div className="flex items-center gap-2">
+              <a 
+                href="#" 
+                className="text-blue-500 hover:text-blue-600 underline text-sm transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log("Learn More clicked");
+                }}
+              >
                 Learn More
               </a>
-              <p className="text-gray-500 text-sm">Meet Up Now</p>
+              <span className="text-gray-500 text-sm">about Meet Up Now</span>
             </div>
           </div>
         </div>
@@ -156,7 +277,7 @@ const Dashboard = () => {
         {/* Right Section - Carousel */}
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="w-full max-w-lg relative">
-            <Carousel arrows infinite={false}>
+            <Carousel arrows infinite={false} autoplay autoplaySpeed={4000}>
               {carouselItems.map((item) => (
                 <div key={item.id}>
                   <div style={contentStyle}>
@@ -165,7 +286,7 @@ const Dashboard = () => {
                       <div className="w-80 h-80 rounded-full bg-gradient-to-br from-red-500 via-yellow-500 via-green-500 to-blue-500 p-1 shadow-2xl">
                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
                           <div
-                            className={`w-32 h-32 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}
+                            className={`w-32 h-32 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg transition-transform hover:scale-110`}
                           >
                             {item.icon}
                           </div>
