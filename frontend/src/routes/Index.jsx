@@ -1,13 +1,13 @@
-import { Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import LandingPage from "../components/layout/public/LandingPage";
-import Dashboard from "../components/layout/private/Dashboard";
-import Preview from "../components/layout/private/Preview";
-import Exit from "../components/layout/private/Exit";
-import Meeting from "../components/layout/private/Meeting";
-import OAuthCallback from "../components/layout/public/auth/OAuthCallback";
-import useAuthStore from "@/stores/AuthStore";
 import FuzzyText from "@/ui/FuzzyText";
+import { useEffect, useState } from "react";
+import LandingPage from "@/pages/LandingPage"; 
+import useAuthStore from "@/stores/AuthStore";
+import Exit from "../components/layout/private/Exit";
+import Preview from "../components/layout/private/Preview";
+import Meeting from "../components/layout/private/Meeting";
+import Dashboard from "../components/layout/private/Dashboard";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
+import OAuthCallback from "../components/layout/public/auth/OAuthCallback";
 
 // 🔐 Enhanced ProtectedRoute dengan loading state
 const ProtectedRoute = () => {
@@ -92,13 +92,7 @@ const AppAuthInitializer = ({ children }) => {
   return children;
 };
 
-function Index() {
-  useEffect(() => {
-    console.log("📍 Router Index mounted");
-    console.log("📍 Current path:", window.location.pathname);
-    console.log("📍 Current search:", window.location.search);
-  }, []);
-
+function Index() { 
   return (
     <AppAuthInitializer>
       <Routes>
@@ -113,7 +107,7 @@ function Index() {
         {/* Private routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/preview" element={<Preview />} />
+          <Route path="/preview/:code" element={<Preview />} />
           <Route path="/meeting" element={<Meeting />} />
           <Route path="/exit" element={<Exit />} />
         </Route>
