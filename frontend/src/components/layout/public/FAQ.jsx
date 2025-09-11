@@ -182,7 +182,7 @@ const FAQ = () => {
 
   return (
     <main
-      className="min-h-screen flex items-center justify-center bg-[#F3F4F6]"
+      className="min-h-screen flex items-center justify-center bg-[#F3F4F6] px-4 sm:px-6"
       style={{
         backgroundImage: `
          linear-gradient(to right, #DFDFDF 1px, transparent 1px),
@@ -191,24 +191,28 @@ const FAQ = () => {
         backgroundSize: "80px 80px",
       }}
     >
-      <div className="w-full max-w-3xl flex flex-col items-center text-center px-6 py-12">
-        <StarBorder
-          color="cyan"
-          speed="3s"
-          backgroundClass="bg-white text-[#0065FD] border border-[#E9E9E9]"
-        >
-          ⁉️ Ask Meet Up Now ⁉️
-        </StarBorder>
+      <div className="w-full max-w-3xl flex flex-col items-center text-center py-12">
+        {/* StarBorder */}
+        <div className="flex justify-center mb-6">
+          <StarBorder
+            color="cyan"
+            speed="3s"
+            backgroundClass="bg-white text-[#0065FD] border border-[#E9E9E9]"
+          >
+            ⁉️ Ask Meet Up Now ⁉️
+          </StarBorder>
+        </div>
 
+        {/* BlurText - Responsive font size */}
         <BlurText
           text="Frequently Asked Questions"
           delay={150}
           animateBy="words"
           direction="top"
-          className="text-[44px] text-[#171717] font-medium mb-8"
+          className="text-[28px] sm:text-[36px] md:text-[44px] text-[#171717] font-medium mb-8 px-2"
         />
 
-        {/* Segmented di bawah judul dengan jarak 60px */}
+        {/* Segmented Control */}
         <div className="mb-[24px]">
           <Segmented
             options={["General", "Features"]}
@@ -216,10 +220,11 @@ const FAQ = () => {
             shape="round"
             value={category}
             onChange={setCategory}
-            className="border border-[#E9E9E9] "
+            className="border border-[#E9E9E9]"
           />
         </div>
 
+        {/* Collapse - Responsive width */}
         <FadeContent
           blur={true}
           duration={1500}
@@ -228,7 +233,7 @@ const FAQ = () => {
         >
           <Collapse
             accordion={false}
-            className="custom-collapse w-full md:max-w-[850px] sm:max-w-[650px] space-y-4"
+            className="custom-collapse w-full max-w-[calc(100vw-32px)] sm:max-w-[650px] md:max-w-[850px] space-y-4"
             items={faqData[category]}
             expandIconPosition="end"
           />
