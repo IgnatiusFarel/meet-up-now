@@ -17,7 +17,7 @@ const Banner = () => {
         rel="stylesheet"
       />
 
-       <main className="bg-[#FDFDFD] rounded-lg min-h-screen mx-3 flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-12 sm:pt-16 md:pt-20 lg:pt-24">
+      <main className="bg-[#FDFDFD] rounded-lg min-h-screen mx-3 flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-12 sm:pt-16 md:pt-20 lg:pt-24">
         {/* ⚡ Fast Meeting Tools */}
         <StarBorder
           color="cyan"
@@ -41,7 +41,7 @@ const Banner = () => {
         >
           <VariableProximity
             label="Click. Connect. Collaborate."
-            className="text-[56px] text-[#171717] font-medium leading-tight"
+            className="text-[36px] sm:text-[56px] text-[#171717] font-medium leading-tight"
             fromFontVariationSettings="'wght' 500, 'opsz' 56"
             toFontVariationSettings="'wght' 1000, 'opsz' 144"
             containerRef={containerRef}
@@ -74,21 +74,21 @@ const Banner = () => {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex gap-3 mt-8">
+        <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full sm:w-auto max-w-xs sm:max-w-none">
           <Button type="primary">
             <ShinyText text="👉 Get Started" speed={1} />
           </Button>
           <Button
             type="default"
             href="https://youtu.be/sUTYQIDv1rk?si=bDML7EykpM1H9I03"
+              className="w-full sm:w-auto"
           >
             🚀
             <GradientText
               colors={["#c084fc", "#a855f7", "#9333ea", "#6366f1", "#60a5fa"]}
               animationSpeed={3}
-            >
-              {" "}
-              Explore Meet Up Now{" "}
+            >              
+              Explore Meet Up Now
             </GradientText>
           </Button>
         </div>
