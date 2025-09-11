@@ -1,15 +1,11 @@
 import Index from "./routes/Index";
 
-function App () {
+function App() {  
   return (
-    <>    
-    <Index />
+    <>
+      <Index />
     </>
   );
-};
+}
 
 export default App;
-
-
-
-
