@@ -17,13 +17,13 @@ const Footer = () => {
 
   const LinkList = ({ title, links }) => (
     <nav aria-label={title}>
-      <h3 className="mb-3 text-lg font-semibold">{title}</h3>
-      <ul className="space-y-2 text-lg">
+      <h3 className="mb-3 text-lg font-medium">{title}</h3>
+      <ul className="space-y-2 text-base font-normal text-gray-300">
         {links.map((link) => (
           <li key={link.href}>
             <a
               href={link.href}
-              className="cursor-pointer hover:text-gray-300"
+              className="cursor-pointer hover:text-blue-200 hover:underline"
             >
               {link.label}
             </a>
@@ -36,8 +36,8 @@ const Footer = () => {
   return (
     <footer className="bg-[#2B2B2B] px-10 py-16 text-[#FDFDFD]">
       {/* Top Section */}
-      <div className="flex justify-between flex-wrap gap-12">
-        <h1 className="text-4xl md:text-5xl font-medium max-w-lg">
+      <div className="flex text-center sm:text-left justify-between flex-wrap gap-12">
+        <h1 className="text-[32px] sm:text-5xl font-medium max-w-lg">
           Manage Your Meeting With Meet Up Now
         </h1>
         <div className="flex gap-16">
