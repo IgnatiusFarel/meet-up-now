@@ -10,11 +10,11 @@ import ReminderImage from "@/assets/reminder.png";
 
 const Features = () => {
   return (
-    <main className="bg-[#2B2B2B] rounded-lg h-[860px] mx-3 my-6 px-10 flex">
-      {/* Kiri */}
-      <div className="w-1/2 flex flex-col h-full">
+    <main className="bg-[#2B2B2B] rounded-lg h-auto sm:h-[860px] mx-3 my-6 px-10 flex flex-col sm:flex-row">
+      {/* Kiri - Content Section */}
+      <div className="w-full sm:w-1/2 flex flex-col h-full">
         {/* Bagian atas */}
-        <div className="pt-[60px]">
+        <div className="pt-[40px] sm:pt-[60px] flex flex-col items-center sm:items-start">
           <StarBorder
             color="magenta"
             speed="3s"
@@ -22,21 +22,23 @@ const Features = () => {
           >
             ✨ Features ✨
           </StarBorder>
-          <SplitText
-            text="All The Features You Need"
-            className="text-[#FDFDFD] font-medium sm:text-[38px] md:text-[44px] lg:text-[44px] mt-4"
-            delay={50}
-            duration={0.5}
-            ease="power3.out"
-            splitType="chars"
-            from={{ opacity: 0, y: 40 }}
-            to={{ opacity: 1, y: 0 }}
-          />
+          <div className="text-center sm:text-left">
+            <SplitText
+              text="All The Features You Need"
+              className="text-[#FDFDFD] font-medium text-[28px] sm:text-[32px] sm:text-[38px] md:text-[44px] lg:text-[44px] mt-4"
+              delay={50}
+              duration={0.5}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+            />
+          </div>
         </div>
 
         {/* Bagian bawah */}
-        <div className="mt-auto pb-[60px]">
-          <div className="max-w-xl mb-6">
+        <div className="mt-auto pb-[60px] flex flex-col items-center sm:items-start">
+          <div className="max-w-xl mb-6 text-center sm:text-left">
             <TextType
               text={[
                 "Packed with essential features — from instant meeting launch, smart screen sharing, to collaborative tools that keep your team in sync.",
@@ -64,34 +66,35 @@ const Features = () => {
         </div>
       </div>
 
-      <div className="w-1/2 relative overflow-hidden flex flex-col gap-y-2">
-        {/* Card 1: masuk ke atas 80px */}
-<SpotlightCard className="w-full max-w-[615px] h-[330px] md:h-[330px] -mt-[80px] ml-auto overflow-hidden">
-  <div className="flex flex-col md:flex-row h-full">
-    {/* Gambar - di atas pada mobile/tablet, di kanan pada desktop */}
-    <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
-      <img
-        src={ArtboardImage}
-        alt="Artboard"
-        className="h-full w-full object-cover rounded-2xl"
-      />
-    </div>
-    
-    {/* Teks - tetap di bawah untuk semua mode */}
-    <div className="flex-1 flex flex-col justify-end z-10 relative md:px-0 md:pb-0">
-      <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
-        Artboard
-      </h2>
-      <p className="text-base text-[#E9E9E9] max-w-[250px] md:max-w-[250px]">
-        Draw ideas together using real-time collaborative whiteboard.
-      </p>
-    </div>
-  </div>
-</SpotlightCard>
+      {/* Kanan - Cards Section */}
+      <div className="w-full sm:w-1/2 relative overflow-hidden flex flex-col items-center sm:items-end gap-y-2 pb-10 sm:pb-0">
+        {/* Card 1: Artboard */}
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] md:h-[330px] sm:-mt-[80px] sm:ml-auto overflow-hidden">
+          <div className="flex flex-col md:flex-row h-full">
+            {/* Gambar */}
+            <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
+              <img
+                src={ArtboardImage}
+                alt="Artboard"
+                className="h-full w-full object-cover rounded-2xl"
+              />
+            </div>
 
-        {/* Card 2: normal */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] ml-auto overflow-hidden">
-          <div className="flex h-full">
+            {/* Teks */}
+            <div className="flex-1 flex flex-col justify-end z-10 relative md:px-0 md:pb-0">
+              <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
+                Artboard
+              </h2>
+              <p className="text-base text-[#E9E9E9] max-w-[250px] md:max-w-[250px]">
+                Draw ideas together using real-time collaborative whiteboard.
+              </p>
+            </div>
+          </div>
+        </SpotlightCard>
+
+        {/* Card 2: Chat */}
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] sm:ml-auto overflow-hidden">
+          <div className="flex flex-col md:flex-row h-full">
             {/* Teks di kiri */}
             <div className="flex-1 flex flex-col justify-end z-10 relative">
               <h2 className="text-[18px] font-semibold text-[#FDFDFD]">Chat</h2>
@@ -100,8 +103,8 @@ const Features = () => {
               </p>
             </div>
 
-            {/* Gambar di kanan full - tanpa gap */}
-            <div className="absolute top-0 right-0 bottom-0 w-1/2">
+            {/* Gambar di kanan */}
+            <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
               <img
                 src={ChatImage}
                 alt="Chat"
@@ -111,8 +114,8 @@ const Features = () => {
           </div>
         </SpotlightCard>
 
-        {/* Card 3: masuk ke bawah 80px */}
-        <SpotlightCard className="w-full max-w-[615px] h-[330px] mb-[-80px] ml-auto overflow-hidden">
+        {/* Card 3: Reminder */}
+        <SpotlightCard className="w-full max-w-[615px] h-[330px] sm:mb-[-80px] sm:ml-auto overflow-hidden">
           <div className="flex h-full">
             {/* Teks di kiri */}
             <div className="flex-1 flex flex-col justify-end z-15 relative">
@@ -124,8 +127,8 @@ const Features = () => {
               </p>
             </div>
 
-            {/* Gambar di kanan full - tanpa gap */}
-            <div className="absolute top-0 right-0 bottom-0 w-1/2">
+            {/* Gambar di kanan */}
+            <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
               <img
                 src={ReminderImage}
                 alt="Reminder"
