@@ -7,10 +7,34 @@ export class MeetingController {
       const { title } = req.body;
       const ownerId = req.user.userId;
 
-      const meeting = await MeetingService.createMeeting(ownerId, title);
-      return res.status(201).json(ApiResponse.success(meeting, 'Meeting created successfully!'));
+      // Validate title
+      if (!title || title.trim().length === 0) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting title is required!')
+        );
+      }
+
+      if (title.length > 100) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting title too long! Maximum 100 characters.')
+        );
+      }
+
+      const meeting = await MeetingService.createMeeting(ownerId, title.trim());
+      
+      // Emit WebSocket event for real-time updates
+      // if (req.wsService) {
+      //   req.wsService.emitToUser(ownerId, 'meeting:created', meeting);
+      // }
+
+      return res.status(201).json(
+        ApiResponse.success(meeting, 'Meeting created successfully!')
+      );
     } catch (error) {
-      return res.status(500).json(ApiResponse.error('Failed to create meeting!', 500, error.message));
+      console.error('Create meeting error:', error);
+      return res.status(500).json(
+        ApiResponse.error('Failed to create meeting!', 500, error.message)
+      );
     }
   }
 
@@ -18,39 +42,82 @@ export class MeetingController {
     try {
       const { code } = req.params;
 
+      // Validate meeting code format
+      if (!code || !/^[A-Z0-9]{6}$/.test(code)) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Invalid meeting code format!')
+        );
+      }
+
       const meeting = await MeetingService.getMeetingByCode(code);
 
       if (!meeting) {
-        return res.status(404).json(ApiResponse.notFound('Meeting not found!', 404));
+        return res.status(404).json(
+          ApiResponse.notFound('Meeting not found!')
+        );
       }
 
       // Check if meeting is expired
       const expiredCheck = await MeetingService.checkMeetingExpiry(code);
       if (expiredCheck && expiredCheck.expired) {
-        return res.status(410).json(ApiResponse.error('Meeting has expired!', 410));
+        return res.status(410).json(
+          ApiResponse.error('Meeting has expired!')
+        );
       }
 
-      return res.status(200).json(ApiResponse.success(meeting, 'Meeting fetched successfully!'));
+      return res.status(200).json(
+        ApiResponse.success(meeting, 'Meeting fetched successfully!')
+      );
     } catch (error) {
-      return res.status(500).json(ApiResponse.error('Failed to fetch meeting!', 500, error.message));
+      console.error('Get meeting by code error:', error);
+      return res.status(500).json(
+        ApiResponse.error('Failed to fetch meeting!', 500, error.message)
+      );
     }
   }
 
   static async join(req, res) {
     try {
-      const { code } = req.body; // Changed to get code from body
+      const { code } = req.body;
       const userId = req.user.userId;
 
+      // Validate meeting code
+      if (!code || !/^[A-Z0-9]{6}$/.test(code)) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Invalid meeting code format!')
+        );
+      }
+
       const participant = await MeetingService.joinMeeting(userId, code);
-      return res.status(200).json(ApiResponse.success(participant, 'Joined meeting successfully!'));
+      
+      // Emit WebSocket events
+      if (req.wsService && participant.meetingId) {
+        // Notify all participants in the meeting
+        req.wsService.emitToMeeting(participant.meetingId, 'participant:joined', {
+          participant,
+          message: `${participant.user.name} joined the meeting`
+        });
+      }
+
+      return res.status(200).json(
+        ApiResponse.success(participant, 'Joined meeting successfully!')
+      );
     } catch (error) {
+      console.error('Join meeting error:', error);
+      
       if (error.message === 'Meeting not found') {
-        return res.status(404).json(ApiResponse.notFound('Meeting not found!', 404));
+        return res.status(404).json(
+          ApiResponse.notFound('Meeting not found!')
+        );
       }
       if (error.message === 'Meeting has ended') {
-        return res.status(410).json(ApiResponse.error('Meeting has ended!', 410));
+        return res.status(410).json(
+          ApiResponse.error('Meeting has ended!')
+        );
       }
-      return res.status(500).json(ApiResponse.error('Failed to join meeting!', 500, error.message));
+      return res.status(500).json(
+        ApiResponse.error('Failed to join meeting!', 500, error.message)
+      );
     }
   }
 
@@ -59,10 +126,31 @@ export class MeetingController {
       const { meetingId } = req.params;
       const userId = req.user.userId;
 
-      await MeetingService.leaveMeeting(userId, meetingId);
-      return res.status(200).json(ApiResponse.success(null, 'Left meeting successfully!'));
+      // Validate meetingId (assuming UUID format)
+      if (!meetingId) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting ID is required!')
+        );
+      }
+
+      const result = await MeetingService.leaveMeeting(userId, meetingId);
+      
+      // Emit WebSocket events
+      if (req.wsService && result.count > 0) {
+        req.wsService.emitToMeeting(meetingId, 'participant:left', {
+          userId,
+          message: `User left the meeting`
+        });
+      }
+
+      return res.status(200).json(
+        ApiResponse.success(null, 'Left meeting successfully!')
+      );
     } catch (error) {
-      return res.status(500).json(ApiResponse.error('Failed to leave meeting!', 500, error.message));
+      console.error('Leave meeting error:', error);
+      return res.status(500).json(
+        ApiResponse.error('Failed to leave meeting!', 500, error.message)
+      );
     }
   }
 
@@ -71,47 +159,118 @@ export class MeetingController {
       const { meetingId } = req.params;
       const ownerId = req.user.userId;
 
+      if (!meetingId) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting ID is required!')
+        );
+      }
+
       const meeting = await MeetingService.endMeeting(meetingId, ownerId);
-      return res.status(200).json(ApiResponse.success(meeting, 'Meeting ended successfully!'));
+      
+      // Emit WebSocket events
+      if (req.wsService) {
+        req.wsService.emitToMeeting(meetingId, 'meeting:ended', {
+          meeting,
+          message: 'Meeting has been ended by the host'
+        });
+      }
+
+      return res.status(200).json(
+        ApiResponse.success(meeting, 'Meeting ended successfully!')
+      );
     } catch (error) {
+      console.error('End meeting error:', error);
+      
       if (error.message === 'Meeting not found') {
-        return res.status(404).json(ApiResponse.notFound('Meeting not found!', 404));
+        return res.status(404).json(
+          ApiResponse.notFound('Meeting not found!')
+        );
       }
       if (error.message === 'Only meeting owner can end the meeting') {
-        return res.status(403).json(ApiResponse.error('Forbidden: Only meeting owner can end the meeting!', 403));
+        return res.status(403).json(
+          ApiResponse.error('Forbidden: Only meeting owner can end the meeting!')
+        );
       }
       if (error.message === 'Meeting already ended') {
-        return res.status(400).json(ApiResponse.badRequest('Meeting already ended!', 400));
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting already ended!')
+        );
       }
-      return res.status(500).json(ApiResponse.error('Failed to end meeting!', 500, error.message));
-    }
-  }
-
-  static async updateStatus(req, res) {
-    try {
-      const { meetingId } = req.params;
-      const { isMicOn, isCameraOn, isScreenShare } = req.body;
-      const userId = req.user.userId;
-
-      const updates = {};
-      if (typeof isMicOn === 'boolean') updates.isMicOn = isMicOn;
-      if (typeof isCameraOn === 'boolean') updates.isCameraOn = isCameraOn;
-      if (typeof isScreenShare === 'boolean') updates.isScreenShare = isScreenShare;
-
-      await MeetingService.updateParticipantStatus(userId, meetingId, updates);
-      return res.status(200).json(ApiResponse.success(null, 'Status updated successfully!'));
-    } catch (error) {
-      return res.status(500).json(ApiResponse.error('Failed to update status!', 500, error.message));
+      return res.status(500).json(
+        ApiResponse.error('Failed to end meeting!', 500, error.message)
+      );
     }
   }
 
   static async getActiveMeetings(req, res) {
     try {
       const userId = req.user.userId;
-      const meetings = await MeetingService.getActiveMeetings(userId);
-      return res.status(200).json(ApiResponse.success(meetings, 'Active meetings fetched successfully!'));
+      const { page = 1, limit = 10 } = req.query;
+      
+      const meetings = await MeetingService.getActiveMeetings(
+        userId, 
+        parseInt(page), 
+        parseInt(limit)
+      );
+      
+      return res.status(200).json(
+        ApiResponse.success(meetings, 'Active meetings fetched successfully!')
+      );
     } catch (error) {
-      return res.status(500).json(ApiResponse.error('Failed to fetch active meetings!', 500, error.message));
+      console.error('Get active meetings error:', error);
+      return res.status(500).json(
+        ApiResponse.error('Failed to fetch active meetings!', 500, error.message)
+      );
+    }
+  }
+
+  // Add missing methods that were referenced in the routes
+  static async checkCanJoin(req, res) {
+    try {
+      const { meetingCode } = req.params;
+      const userId = req.user.userId;
+
+      if (!meetingCode || !/^[A-Z0-9]{6}$/.test(meetingCode)) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Invalid meeting code format!')
+        );
+      }
+
+      const result = await MeetingService.checkCanJoin(userId, meetingCode);
+      
+      return res.status(200).json(
+        ApiResponse.success(result, 'Join check completed!')
+      );
+    } catch (error) {
+      console.error('Check can join error:', error);
+      
+      if (error.message === 'Meeting not found') {
+        return res.status(404).json(
+          ApiResponse.notFound('Meeting not found!')
+        );
+      }
+      
+      return res.status(500).json(
+        ApiResponse.error('Failed to check join permission!', 500, error.message)
+      );
+    }
+  }
+
+  static async cleanupExpiredMeetings(req, res) {
+    try {
+      // This should typically be an admin-only endpoint
+      // Add admin check here if needed
+      
+      const result = await MeetingService.cleanupExpiredMeetings();
+      
+      return res.status(200).json(
+        ApiResponse.success(result, 'Cleanup completed successfully!')
+      );
+    } catch (error) {
+      console.error('Cleanup expired meetings error:', error);
+      return res.status(500).json(
+        ApiResponse.error('Failed to cleanup expired meetings!', 500, error.message)
+      );
     }
   }
 }
