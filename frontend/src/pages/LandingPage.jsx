@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import Navbar from "./Navbar";
-import Banner from "./Banner";
-import Client from "./Client";
-import Testimonials from "./Testimonials";
-import Features from "./Features";
-import FAQ from "./FAQ";
-import Footer from "./Footer";
+import Navbar from "../components/layout/public/Navbar";
+import Banner from "../components/layout/public/Banner";
+import Client from "../components/layout/public/Client";
+import Testimonials from "../components/layout/public/Testimonials";
+import Features from "../components/layout/public/Features";
+import FAQ from "../components/layout/public/FAQ";
+import Footer from "../components/layout/public/Footer";
 
 const LandingPage = () => {
   useEffect(() => {
@@ -18,7 +18,6 @@ const LandingPage = () => {
   return (
     <>
       <Navbar />
-
       <main>
         <section id="home">
           <Banner />
