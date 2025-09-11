@@ -1,3 +1,4 @@
+// app.js
 import express from 'express';
 import { createServer } from 'http';
 import cookieParser from 'cookie-parser';
@@ -5,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '#routes/authRoutes';
 import meetingRoutes from '#routes/meetingRoutes';
+import participantRoutes from '#routes/participantRoutes';
 import chatRoutes from '#routes/chatRoutes';
 import { ApiResponse } from '#utils/response';
 import { WebSocketService } from '#services/websocketService';
@@ -40,12 +42,12 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.status(200).json(
     ApiResponse.success(
-      { 
-        status: 'OK', 
+      {
+        status: 'OK',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         websocket: 'Active'
-      }, 
+      },
       'Server is healthy'
     )
   );
@@ -54,6 +56,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/meetings/:meetingId/participants', participantRoutes);
 app.use('/api/chat', chatRoutes);
 
 // WebSocket status endpoint
@@ -118,8 +121,8 @@ app.use((err, req, res, next) => {
   
   return res.status(err.statusCode || 500).json(
     ApiResponse.error(
-      err.message || 'Internal server error', 
-      err.statusCode || 500, 
+      err.message || 'Internal server error',
+      err.statusCode || 500,
       process.env.NODE_ENV === 'development' ? err.stack : undefined
     )
   );
@@ -131,6 +134,7 @@ server.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth routes: http://localhost:${PORT}/api/auth`);
   console.log(`📹 Meeting routes: http://localhost:${PORT}/api/meetings`);
+  console.log(`👥 Participant routes: http://localhost:${PORT}/api/meetings/:meetingId/participants`);
   console.log(`💬 Chat routes: http://localhost:${PORT}/api/chat`);
   console.log(`🔌 WebSocket: Active on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
