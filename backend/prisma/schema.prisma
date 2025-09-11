@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  userId    String   @id @default(uuid()) @map("_id")
-  email     String   @unique
-  name      String?
-  avatarUrl String?
-
-  // OAuth info
-  provider   String // ex: "google"
-  providerId String // Google sub id
-
+  userId     String   @id @default(uuid()) @map("_id")
+  email      String   @unique
+  name       String?
+  avatarUrl  String?  
+  provider   String   
+  providerId String
+  role       String     @default("user")
+  emailVerified Boolean @default(false)
+  isActive      Boolean @default(true)
+  tokenVersion  Int     @default(0)
+  lastLoginAt   DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -25,6 +27,7 @@ model User {
   chatMessages   ChatMessage[]        @relation("UserMessages")
 
   @@map("users")
+  @@unique([provider, providerId])
 }
 
 model Meeting {
