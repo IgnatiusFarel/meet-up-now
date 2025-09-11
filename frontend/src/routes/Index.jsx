@@ -7,14 +7,15 @@ import Exit from "../components/layout/private/Exit";
 import Meeting from "../components/layout/private/Meeting";
 import OAuthCallback from "../components/layout/public/auth/OAuthCallback";
 import useAuthStore from "@/stores/AuthStore";
+import FuzzyText from "@/ui/FuzzyText";
 
 // 🔐 Enhanced ProtectedRoute dengan loading state
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
-  console.log('ProtectedRoute check:', { 
-    isAuthenticated, 
-    isLoading
+  console.log("ProtectedRoute check:", {
+    isAuthenticated,
+    isLoading,
   });
 
   // ✅ Show loading saat processing auth
@@ -30,7 +31,7 @@ const ProtectedRoute = () => {
   }
 
   if (!isAuthenticated) {
-    console.log('Not authenticated, redirecting to home');
+    console.log("Not authenticated, redirecting to home");
     return <Navigate to="/" replace />;
   }
 
@@ -41,9 +42,9 @@ const ProtectedRoute = () => {
 const AuthRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
-  console.log('AuthRoute check:', { 
-    isAuthenticated, 
-    isLoading
+  console.log("AuthRoute check:", {
+    isAuthenticated,
+    isLoading,
   });
 
   // ✅ Show loading saat processing auth
@@ -59,7 +60,7 @@ const AuthRoute = () => {
   }
 
   if (isAuthenticated) {
-    console.log('Already authenticated, redirecting to dashboard');
+    console.log("Already authenticated, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -105,10 +106,10 @@ function Index() {
         <Route element={<AuthRoute />}>
           <Route path="/" element={<LandingPage />} />
         </Route>
-        
+
         {/* OAuth callback (public, tidak pakai AuthRoute biar bisa handle redirect) */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
-        
+
         {/* Private routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -116,9 +117,19 @@ function Index() {
           <Route path="/meeting" element={<Meeting />} />
           <Route path="/exit" element={<Exit />} />
         </Route>
-        
+
         {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={
+            <div className="flex flex-col items-center justify-center min-h-screen bg-black space-y-4">
+              <FuzzyText fontSize="clamp(3rem, 12vw, 12rem)">404</FuzzyText>
+              <FuzzyText fontSize="clamp(1.5rem, 6vw, 4rem)">
+                Not Found
+              </FuzzyText>
+            </div>
+          }
+        />
       </Routes>
     </AppAuthInitializer>
   );
