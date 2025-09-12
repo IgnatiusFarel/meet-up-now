@@ -48,12 +48,14 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 px-2 sm:px-10 h-[90px] flex items-center backdrop-blur">
       <div className="container mx-auto flex items-center justify-between">
-        {/* Left Section (Logo) */}
         <Link to="/" className="text-2xl font-bold">
-          <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-16 sm:w-20 md:w-24 lg:w-28" />
+          <img
+            src={MeetUpNow}
+            alt="Meet Up Now Logo"
+            className="w-16 sm:w-20 md:w-24 lg:w-28"
+          />
         </Link>
 
-        {/* Center Section (GooeyNav) */}
         <nav className="hidden lg:flex">
           <GooeyNav
             items={items}
@@ -68,9 +70,8 @@ const Navbar = () => {
           />
         </nav>
 
-        {/* Right Section (Buttons) */}
         <div className="flex space-x-3">
-          <Button type="primary" className="rounded-full" onClick={handleLogin}>
+          <Button type="primary" className="rounded-full transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner" title="Click to try now" onClick={handleLogin}>
             ✨ Try Now
           </Button>
         </div>

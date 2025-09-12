@@ -10,10 +10,8 @@ import ReminderImage from "@/assets/reminder.png";
 
 const Features = () => {
   return (
-    <main className="bg-[#2B2B2B] rounded-lg h-auto sm:h-[860px] mx-3 my-6 px-10 flex flex-col sm:flex-row">
-      {/* Kiri - Content Section */}
-      <div className="w-full sm:w-1/2 flex flex-col h-full">
-        {/* Bagian atas */}
+    <main className="bg-[#2B2B2B] rounded-lg h-auto sm:h-[860px] mx-3 my-6 px-10 flex flex-col sm:flex-row">      
+      <div className="w-full sm:w-1/2 flex flex-col h-full">        
         <div className="pt-[40px] sm:pt-[60px] flex flex-col items-center sm:items-start">
           <StarBorder
             color="magenta"
@@ -35,8 +33,7 @@ const Features = () => {
             />
           </div>
         </div>
-
-        {/* Bagian bawah */}
+        
         <div className="mt-auto pb-[60px] flex flex-col items-center sm:items-start">
           <div className="max-w-xl mb-6 text-center sm:text-left">
             <TextType
@@ -54,24 +51,25 @@ const Features = () => {
               textColors={["#E9E9E9"]}
             />
           </div>
-          <Button type="default">
+          <Button type="default"   className="transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner"
+                title="Click to see the features of Meet Up Now."
+                href="https://play.google.com/store/apps/details?id=com.google.android.apps.tachyon"
+                target="_blank"
+                rel="noopener noreferrer">
             🔎
             <GradientText
               colors={["#3b3b3b", "#2b2b2b", "#a1866f", "#000000"]}
-              animationSpeed={1}
+              animationSpeed={2}
             >
               See More
             </GradientText>
           </Button>
         </div>
       </div>
-
-      {/* Kanan - Cards Section */}
+      
       <div className="w-full sm:w-1/2 relative overflow-hidden flex flex-col items-center sm:items-end gap-y-2 pb-10 sm:pb-0">
-        {/* Card 1: Artboard */}
         <SpotlightCard className="w-full max-w-[615px] h-[330px] md:h-[330px] sm:-mt-[80px] sm:ml-auto overflow-hidden">
-          <div className="flex flex-col md:flex-row h-full">
-            {/* Gambar */}
+          <div className="flex flex-col md:flex-row h-full">            
             <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
               <img
                 src={ArtboardImage}
@@ -79,8 +77,7 @@ const Features = () => {
                 className="h-full w-full object-cover rounded-2xl"
               />
             </div>
-
-            {/* Teks */}
+            
             <div className="flex-1 flex flex-col justify-end z-10 relative md:px-0 md:pb-0">
               <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
                 Artboard
@@ -92,18 +89,15 @@ const Features = () => {
           </div>
         </SpotlightCard>
 
-        {/* Card 2: Chat */}
         <SpotlightCard className="w-full max-w-[615px] h-[330px] sm:ml-auto overflow-hidden">
           <div className="flex flex-col md:flex-row h-full">
-            {/* Teks di kiri */}
             <div className="flex-1 flex flex-col justify-end z-10 relative">
               <h2 className="text-[18px] font-semibold text-[#FDFDFD]">Chat</h2>
               <p className="text-base text-[#E9E9E9] max-w-[250px]">
                 Send messages, share files, and chat in meetings.
               </p>
             </div>
-
-            {/* Gambar di kanan */}
+            
             <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
               <img
                 src={ChatImage}
@@ -114,10 +108,8 @@ const Features = () => {
           </div>
         </SpotlightCard>
 
-        {/* Card 3: Reminder */}
         <SpotlightCard className="w-full max-w-[615px] h-[330px] sm:mb-[-80px] sm:ml-auto overflow-hidden">
           <div className="flex h-full">
-            {/* Teks di kiri */}
             <div className="flex-1 flex flex-col justify-end z-15 relative">
               <h2 className="text-[18px] font-semibold text-[#FDFDFD]">
                 Reminder
@@ -126,8 +118,7 @@ const Features = () => {
                 Set up a new meeting and get your meeting link.
               </p>
             </div>
-
-            {/* Gambar di kanan */}
+                        
             <div className="absolute top-0 left-0 right-0 h-1/2 md:top-0 md:right-0 md:bottom-0 md:left-auto md:w-1/2 md:h-full">
               <img
                 src={ReminderImage}

@@ -35,7 +35,6 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#2B2B2B] px-10 py-16 text-[#FDFDFD]">
-      {/* Top Section */}
       <div className="flex text-center sm:text-left justify-between flex-wrap gap-12">
         <h1 className="text-[32px] sm:text-5xl font-medium max-w-lg">
           Manage Your Meeting With Meet Up Now
@@ -46,10 +45,8 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Divider */}
       <hr className="my-16 border-gray-500" />
 
-      {/* Branding - Full Width Text */}
       <div className="text-center -mx-10">
         <h2 className="text-[13vw] sm:text-[14vw] md:text-[14vw] lg:text-[12vw] xl:text-[15vw] font-medium leading-none text-[#525252] px-4">
           Meet Up Now

@@ -2,8 +2,8 @@ import { useState } from "react";
 import BlurText from "@/ui/BlurText";
 import ShinyText from "@/ui/ShinyText";
 import StarBorder from "@/ui/StarBorder";
-import { Collapse, Segmented } from "antd";
 import FadeContent from "@/ui/FadeContent";
+import { Collapse, Segmented } from "antd";
 
 const faqData = {
   General: [
@@ -192,7 +192,6 @@ const FAQ = () => {
       }}
     >
       <div className="w-full max-w-3xl flex flex-col items-center text-center py-12">
-        {/* StarBorder */}
         <div className="flex justify-center mb-6">
           <StarBorder
             color="cyan"
@@ -203,7 +202,6 @@ const FAQ = () => {
           </StarBorder>
         </div>
 
-        {/* BlurText - Responsive font size */}
         <BlurText
           text="Frequently Asked Questions"
           delay={150}
@@ -212,7 +210,6 @@ const FAQ = () => {
           className="text-[28px] sm:text-[36px] md:text-[44px] text-[#171717] font-medium mb-8 px-2"
         />
 
-        {/* Segmented Control */}
         <div className="mb-[24px]">
           <Segmented
             options={["General", "Features"]}
@@ -224,7 +221,6 @@ const FAQ = () => {
           />
         </div>
 
-        {/* Collapse - Responsive width */}
         <FadeContent
           blur={true}
           duration={1500}
@@ -232,8 +228,8 @@ const FAQ = () => {
           initialOpacity={0}
         >
           <Collapse
-            accordion={false}
-            className="custom-collapse w-full max-w-[calc(100vw-32px)] sm:max-w-[650px] md:max-w-[850px] space-y-4"
+            accordion={false}              
+            className="custom-collapse w-full max-w-[calc(100vw-32px)] sm:max-w-[650px] md:max-w-[850px] hover:scale-105 space-y-4"
             items={faqData[category]}
             expandIconPosition="end"
           />

@@ -1,7 +1,8 @@
-import { Button } from "antd";
-import { useRef } from "react";
+import Login from "./auth/Login";
+import { Button, Modal } from "antd";
 import TextType from "@/ui/TextType";
 import ShinyText from "@/ui/ShinyText";
+import { useRef, useState } from "react";
 import StarBorder from "@/ui/StarBorder";
 import GradientText from "@/ui/GradientText";
 import PreviewImage from "@/assets/preview.png";
@@ -9,6 +10,18 @@ import VariableProximity from "@/ui/VariableProximity";
 
 const Banner = () => {
   const containerRef = useRef(null);
+  const [openModalTutorial, setOpenModalTutorial] = useState(false);
+  const [openModalLogin, setOpenModalLogin] = useState(false);
+
+  const showModal = () => {
+    setOpenModalLogin(true);
+    setOpenModalTutorial(true);
+  };
+
+  const handleClose = () => {
+    setOpenModalLogin(false);
+    setOpenModalTutorial(false);
+  };
 
   return (
     <>
@@ -18,7 +31,6 @@ const Banner = () => {
       />
 
       <main className="bg-[#FDFDFD] rounded-lg min-h-screen mx-3 flex flex-col items-center justify-start text-center px-4 sm:px-6 pt-12 sm:pt-16 md:pt-20 lg:pt-24">
-        {/* ⚡ Fast Meeting Tools */}
         <StarBorder
           color="cyan"
           speed="3s"
@@ -27,7 +39,6 @@ const Banner = () => {
           ⚡ Fast Meeting Tools
         </StarBorder>
 
-        {/* Headline */}
         <div
           ref={containerRef}
           className="relative w-full h-auto"
@@ -55,7 +66,6 @@ const Banner = () => {
           />
         </div>
 
-        {/* Deskripsi */}
         <div className="max-w-xl mt-2">
           <TextType
             text={[
@@ -73,34 +83,56 @@ const Banner = () => {
           />
         </div>
 
-        {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full sm:w-auto max-w-xs sm:max-w-none">
-          <Button type="primary">
+          <Button type="primary" className="transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner" title="Click to login your google account." onClick={showModal}>
             <ShinyText text="👉 Get Started" speed={1} />
           </Button>
           <Button
-            type="default"
-            href="https://youtu.be/sUTYQIDv1rk?si=bDML7EykpM1H9I03"
-              className="w-full sm:w-auto"
+            type="default"           
+            className="w-full sm:w-auto transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inne"
+            title="Click to watch a tutorial on how to get started with Meet Up Now."
+            onClick={showModal}
           >
             🚀
             <GradientText
               colors={["#c084fc", "#a855f7", "#9333ea", "#6366f1", "#60a5fa"]}
               animationSpeed={3}
-            >              
+            >
               Explore Meet Up Now
             </GradientText>
           </Button>
         </div>
 
-        {/* Gambar Preview */}
         <div className="mt-8">
           <img
             src={PreviewImage}
-            alt="Preview"
+            alt="Preview Image"
             className="max-w-full h-auto rounded-lg shadow-md"
           />
         </div>
+
+        <Modal
+          title="How To Use Meet Up Now"
+          visible={openModalTutorial}
+          onCancel={handleClose}
+          width={800}
+          centered
+          footer={null}
+        >
+          <div className="flex justify-center">
+            <iframe
+              width="100%"
+              height="450px"
+              src="https://www.youtube.com/embed/sUTYQIDv1rk"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="YouTube video tutorial"
+            />
+          </div>
+        </Modal>
+
+         <Login open={openModalLogin} onClose={handleClose} />
       </main>
     </>
   );

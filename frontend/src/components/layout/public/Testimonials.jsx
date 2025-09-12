@@ -38,7 +38,6 @@ const items = testimonials.map((t, idx) => ({
       key={idx}
       className="bg-white rounded-2xl p-6 w-[400px] h-[230px] border border-[#E9E9E9]"
     >
-      {/* Avatar + Name + Title */}
       <div className="flex items-center gap-4 mb-6">
         <img
           src={t.avatar}
@@ -51,7 +50,6 @@ const items = testimonials.map((t, idx) => ({
         </div>
       </div>
 
-      {/* Testimonial Text */}
       <p className="text-[#717171] text-[16px] font-normal leading-relaxed text-left">
         "{t.text}"
       </p>
@@ -63,7 +61,6 @@ const Testimonials = () => {
   return (
     <>
       <div className="bg-[#FDFDFD] pt-[40px] sm:pt-[60px] px-10">
-        {/* StarBorder - center on mobile, keep original position on larger screens */}
         <div className="flex sm:block justify-center">
           <StarBorder
             color="cyan"
@@ -74,9 +71,7 @@ const Testimonials = () => {
           </StarBorder>
         </div>
 
-        {/* Main content - responsive layout */}
         <div className="flex flex-col sm:flex-row sm:justify-between items-center sm:items-start mt-4 sm:gap-8">
-          {/* Left side - SplitText */}
           <div className="flex-1 flex justify-center sm:justify-start">
             <SplitText
               text="What People Are Saying"
@@ -90,7 +85,6 @@ const Testimonials = () => {
             />
           </div>
 
-          {/* Right side - TextType and Button */}
           <div className="flex-1 flex flex-col items-center sm:items-end">
             <div className="max-w-lg text-center sm:text-right mt-4">
               <TextType
@@ -109,7 +103,14 @@ const Testimonials = () => {
               />
             </div>
             <div className="mt-4">
-              <Button type="default">
+              <Button
+                type="default"
+                className="transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner"
+                title="Click to see ratings and reviews from our users."
+                href="https://play.google.com/store/apps/details?id=com.google.android.apps.tachyon"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 🔎
                 <GradientText
                   colors={["#3b3b3b", "#2b2b2b", "#a1866f", "#000000"]}

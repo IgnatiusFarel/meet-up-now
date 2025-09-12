@@ -82,13 +82,12 @@ const Client = () => {
           Our Trusted Clients
         </h2>
       </header>
-      {/* LogoLoop Container - Perfectly centered */}
+
       <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div className="w-full flex flex-col items-center justify-center h-full space-y-16 md:space-y-16 sm:space-y-24">
-          {/* Logo Loop pertama - arah kiri */}
           <div className="h-[70px] w-full relative overflow-hidden">
             <LogoLoop
-              logos={imageLogos.slice(0, 7)} // 6 logo pertama
+              logos={imageLogos.slice(0, 7)}
               speed={80}
               direction="left"
               logoHeight={40}
@@ -101,10 +100,9 @@ const Client = () => {
             />
           </div>
 
-          {/* Logo Loop kedua - arah kanan */}
           <div className="h-[70px] w-full relative overflow-hidden">
             <LogoLoop
-              logos={imageLogos.slice(7)} // 6 logo sisanya
+              logos={imageLogos.slice(7)}
               speed={80}
               direction="right"
               logoHeight={40}
@@ -119,7 +117,6 @@ const Client = () => {
         </div>
       </div>
 
-      {/* Squares dengan blend mode untuk efek menarik */}
       <Squares
         speed={0.5}
         squareSize={35}
@@ -133,7 +130,6 @@ const Client = () => {
         }}
       />
 
-      {/* Optional: Overlay gradasi untuk efek depth */}
       <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
