@@ -1,17 +1,21 @@
-import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  VideoCameraOutlined,
   UserOutlined,
-  ExclamationCircleOutlined,
   ReloadOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Avatar, Select } from "antd";
-import { Link } from "react-router-dom";
-import MeetUpNow from "../../../assets/MeetUpNow.png";
+import useAuthStore from "@/stores/AuthStore";
+import MeetUpNow from "@/assets/MeetUpNow.png";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Button, Avatar, Select, App } from "antd";
+import { useEffect, useRef, useState, useCallback } from "react";
+import useMeetingStore from "@/stores/MeetingStore";
 
 const Preview = () => {
+  const { code } = useParams();
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const navigate = useNavigate();
+  const { message } = App.useApp();
   const [devices, setDevices] = useState({
     cameras: [],
     microphones: [],
@@ -26,8 +30,90 @@ const Preview = () => {
   const [camOn, setCamOn] = useState(true);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [permissionGranted, setPermissionGranted] = useState(false);
   const [debugInfo, setDebugInfo] = useState([]);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [joining, setJoining] = useState(false);
+
+  // Auth Store
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
+  // Meeting Store
+  const setStream = useMeetingStore((state) => state.setStream); 
+  const joinMeeting = useMeetingStore((state) => state.joinMeeting);
+  const checkCanJoin = useMeetingStore((state) => state.checkCanJoin);
+  const joinCheckResult = useMeetingStore((state) => state.joinCheckResult);
+  const setCurrentUserStatus = useMeetingStore(
+    (state) => state.setCurrentUserStatus
+  );
+
+  const handleLogout = async () => {
+    try {
+      stopAllTracks();
+
+      await logout();
+      message.success("You’ve been logged out. See you next time!");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      clearAuth();
+      navigate("/", { replace: true });
+    }
+  };
+
+  // Validate meeting code and check if user can join
+  useEffect(() => {
+    const validateMeetingAccess = async () => {
+      if (!code) {
+        message.error("Meeting code is required");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Validate code format
+      if (!/^[A-Z0-9]{6}$/.test(code)) {
+        message.error("Invalid meeting code format");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      try {
+        console.log("Validating access to meeting:", code);
+        const result = await checkCanJoin(code);
+
+        if (!result.canJoin) {
+          // Handle different error cases
+          switch (result.reason) {
+            case "Meeting not found":
+            case "Meeting not found!":
+              message.error("Meeting not found! Please check the room code.");
+              break;
+            case "Meeting has ended":
+            case "Meeting has ended!":
+              message.error("This meeting has already ended.");
+              break;
+            case "Meeting expired":
+              message.error("This meeting has expired.");
+              break;
+            default:
+              message.error(result.reason || "Cannot access this meeting.");
+          }
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        console.log("Meeting access validated:", result.meeting);
+      } catch (error) {
+        console.error("Meeting validation error:", error);
+        message.error("Failed to validate meeting access");
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    validateMeetingAccess();
+  }, [code, checkCanJoin, navigate, message]);
 
   // Add debug log
   const addDebugLog = useCallback((message) => {
@@ -415,25 +501,109 @@ const Preview = () => {
     requestPermissions();
   }, [addDebugLog, stopAllTracks]);
 
+  const handleJoinNow = async () => {
+    if (!code) {
+      message.error("Meeting code is missing!");
+      return;
+    }
+
+    if (!permissionGranted) {
+      message.error("Please allow camera and microphone access first");
+      return;
+    }
+
+    setJoining(true);
+
+    try {
+      console.log("Joining meeting with code:", code);
+
+      setStream(streamRef.current);
+
+      setCurrentUserStatus({
+        isMicOn: micOn,
+        isCameraOn: camOn,
+        isScreenShare: false,
+      });
+
+      const participant = await joinMeeting(code);
+
+      if (participant) {
+        console.log("Successfully joined meeting:", participant);
+        message.success("Joining meeting...");
+
+        navigate(`/meeting/${code}`, {
+          replace: true,
+          state: {            
+            MediaSettings: {
+              isMicOn: micOn,
+              isCameraOn: camOn,
+              selectedDevices: selected,
+            },
+          },
+        });
+      } else {
+        throw new Error("Failed to join meeting - no participant data");
+      }
+    } catch (error) {
+      console.error("Join meeting error:", error);
+
+      let errorMessage = "Failed to join meeting";
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 404:
+            errorMessage = "Meeting not found, please check the room code!";
+            break;
+          case 410:
+            errorMessage = "This meeting has ended!";
+            break;
+          default:
+            errorMessage =
+              error.response.data?.message || "Failed to join meeting";
+        }
+      } else {
+        errorMessage = error.message || "Failed to join meeting";
+      }
+      message.error(errorMessage);
+
+      if (error.response?.status === 404 || error.response?.status === 410) {
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 2000);
+      }
+    } finally {
+      setJoining(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="flex items-center justify-between px-6">
         <Link to="/" className="text-2xl font-bold">
           <img src={MeetUpNow} alt="Meet Up Now Logo" className="w-28" />
         </Link>
 
-        <div className="flex items-center space-x-2">
-          <div className="flex flex-col">
-            <p>emailuser@gmail.com</p>
-            <Button type="text" size="small" danger>
-              Logout
+        <div className="flex items-center space-x-3">
+          <div className="flex flex-col text-right">
+            <p className="text-sm font-medium text-gray-800">
+              {user?.email || "User Email"}
+            </p>
+            <Button
+              type="text"
+              size="small"
+              danger
+              onClick={handleLogout}
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging out..." : "Logout"}
             </Button>
           </div>
           <Avatar
-            className="bg-blue-600 cursor-pointer"
+            className="bg-blue-500 cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-blue-300"
+            size={42}
+            src={user?.avatarUrl}
             icon={<UserOutlined />}
-            size={48}
+            alt={user?.name || "User Avatar"}
           />
         </div>
       </header>
@@ -443,7 +613,7 @@ const Preview = () => {
         {/* Preview Kamera */}
         <div className="w-3/4 bg-gray-900 rounded-3xl flex items-center justify-center relative overflow-hidden">
           <div className="absolute top-4 left-4 z-20 bg-black bg-opacity-60 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
-            <p className="text-sm font-medium">Ignatius Farel</p>
+            <p className="text-sm font-medium">{user?.name || "User Name"}</p>
           </div>
           {loading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
@@ -537,9 +707,11 @@ const Preview = () => {
           <Button
             type="primary"
             className="transition-colors disabled:bg-gray-400 mb-8"
-            disabled={!permissionGranted || error}
+            disabled={!permissionGranted || error || joining}
+            loading={joining}
+            onClick={handleJoinNow}
           >
-            Join Now
+            {joining ? "Joining..." : "Join Now"}
           </Button>
           <div className="space-y-4">
             {[
@@ -593,7 +765,7 @@ const Preview = () => {
 
             {devices.cameras.length > 0 && (
               <p className="text-xs text-gray-500 mb-3">
-                Ditemukan {devices.cameras.length} kamera,{" "}
+                Ditemukan {devices.cameras.length} kamera,
                 {devices.microphones.length} mikrofon
               </p>
             )}
