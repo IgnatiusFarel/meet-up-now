@@ -13,8 +13,11 @@ const Banner = () => {
   const [openModalTutorial, setOpenModalTutorial] = useState(false);
   const [openModalLogin, setOpenModalLogin] = useState(false);
 
-  const showModal = () => {
+  const handleLogin = () => {
     setOpenModalLogin(true);
+  }  
+
+  const showModal = () => {
     setOpenModalTutorial(true);
   };
 
@@ -84,7 +87,7 @@ const Banner = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full sm:w-auto max-w-xs sm:max-w-none">
-          <Button type="primary" className="transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner" title="Click to login your google account." onClick={showModal}>
+          <Button type="primary" className="transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner" title="Click to login your google account." onClick={handleLogin}>
             <ShinyText text="👉 Get Started" speed={1} />
           </Button>
           <Button
@@ -113,7 +116,7 @@ const Banner = () => {
 
         <Modal
           title="How To Use Meet Up Now"
-          visible={openModalTutorial}
+          open={openModalTutorial}
           onCancel={handleClose}
           width={800}
           centered
