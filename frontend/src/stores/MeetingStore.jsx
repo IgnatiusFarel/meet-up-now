@@ -7,7 +7,6 @@ import Api from '@/Services/Api';
  * Enhanced Meeting Store with comprehensive participant management
  * Covers all endpoints from the routes you provided
  */
-
 const useMeetingStore = create(
   devtools(
     subscribeWithSelector(
@@ -30,7 +29,10 @@ const useMeetingStore = create(
           isCameraOn: true,
           isScreenShare: false
         },
-        
+
+        // Join check state 
+        joinCheckResult: null, 
+      
         // Filters & Pagination
         filters: {
           status: 'all',
@@ -176,6 +178,7 @@ const useMeetingStore = create(
               state.participants = [];
               state.meetingStats = null;
               state.participantHistory = [];
+              state.joinCheckResult = null; 
               state.currentUserStatus = {
                 isMicOn: true,
                 isCameraOn: true,
@@ -190,6 +193,7 @@ const useMeetingStore = create(
             set((state) => {
               state.currentMeeting = null;
               state.participants = [];
+              state.joinCheckResult = null; 
             });
           }
         },
@@ -222,6 +226,7 @@ const useMeetingStore = create(
                 if (state.currentMeeting?.meetingId === meetingId) {
                   state.currentMeeting = null;
                   state.participants = [];
+                  state.joinCheckResult = null; 
                 }
                 
                 state.isLoading = false;
@@ -459,16 +464,70 @@ const useMeetingStore = create(
         checkCanJoin: async (meetingCode) => {
           console.log('🔒 Checking if can join meeting:', meetingCode);
 
+          set((state) => {
+            state.isLoading = true; 
+            state.error = null;
+            state.joinCheckResult = null; 
+          });          
+
           try {
             const response = await Api.get(`/meetings/code/${meetingCode}/can-join`);
             
             if (response.data?.success) {
-              console.log('✅ Join check completed');
-              return response.data.data;
+              const result = response.data.data; 
+
+              set((state) => {
+                state.joinCheckResult = result; 
+                state.isLoading = false; 
+              }); 
+              
+              console.log('✅ Join check completed:', result);
+              return result;
             }
           } catch (error) {
-            console.error('❌ Failed to check join permission:', error);
-            throw error;
+           console.error('❌ Failed to check join permission:', error);
+            
+            let errorMessage = 'Failed to check meeting status';
+            let reason = 'Unknown error';
+            
+            // Handle different error responses
+            if (error.response) {
+              switch (error.response.status) {
+                case 404:
+                  errorMessage = 'Meeting not found';
+                  reason = 'Meeting not found';
+                  break;
+                case 410:
+                  errorMessage = 'Meeting has ended';
+                  reason = 'Meeting has ended';
+                  break;
+                case 400:
+                  errorMessage = 'Invalid meeting code format';
+                  reason = 'Invalid meeting code';
+                  break;
+                default:
+                  errorMessage = error.response.data?.message || 'Failed to check meeting';
+                  reason = error.response.data?.message || 'Connection failed';
+              }
+            } else if (error.request) {
+              errorMessage = 'Network error. Please check your connection.';
+              reason = 'Network error';
+            }
+            
+            set((state) => {
+              state.isLoading = false;
+              state.error = errorMessage;
+              state.joinCheckResult = {
+                canJoin: false,
+                reason: reason,
+                meeting: null
+              };
+            });
+            
+            // Throw error with structured data
+            const enhancedError = new Error(reason);
+            enhancedError.response = error.response;
+            throw enhancedError;
           }
         },
 
@@ -492,6 +551,21 @@ const useMeetingStore = create(
         },
 
         // ============ LOCAL STATE MANAGEMENT ============
+
+        /**
+ * MediaStream management
+ */
+stream: null,
+setStream: (stream) => {
+  set((state) => {
+    state.stream = stream;
+  });
+},
+clearStream: () => {
+  set((state) => {
+    state.stream = null;
+  });
+},
 
         /**
          * Update local participant list (for real-time updates)
