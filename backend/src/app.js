@@ -1,25 +1,23 @@
-// app.js
+import cors from 'cors';
+import dotenv from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from '#routes/authRoutes';
-import meetingRoutes from '#routes/meetingRoutes';
-import participantRoutes from '#routes/participantRoutes';
 import chatRoutes from '#routes/chatRoutes';
 import { ApiResponse } from '#utils/response';
-import { WebSocketService } from '#services/websocketService';
+import meetingRoutes from '#routes/meetingRoutes';
+import participantRoutes from '#routes/participantRoutes';
+import { getWsService, initWsService } from '#services/websocketInstance';
+import { attacWsService } from '#middleware/ws';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Initialize WebSocket service
-const wsService = new WebSocketService(server);
+initWsService(server); 
 
 // Middlewares
 app.use(cors({
@@ -30,13 +28,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-
-// Add WebSocket instance to request for controllers
-app.use((req, res, next) => {
-  req.io = wsService.io;
-  req.wsService = wsService;
-  next();
-});
+app.use(attacWsService)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -61,6 +53,7 @@ app.use('/api/chat', chatRoutes);
 
 // WebSocket status endpoint
 app.get('/api/websocket/status', (req, res) => {
+  const wsService = getWsService();
   res.json(
     ApiResponse.success(
       {
@@ -76,17 +69,18 @@ app.get('/api/websocket/status', (req, res) => {
 app.get('/api/meetings/:meetingId/connections', async (req, res) => {
   try {
     const { meetingId } = req.params;
+    const wsService = getWsService();
     const count = await wsService.getMeetingConnectionCount(meetingId);
     
     res.json(
       ApiResponse.success(
         { connectionCount: count },
-        'Connection count retrieved'
+        'Connection count retrieved!'
       )
     );
   } catch (error) {
     res.status(500).json(
-      ApiResponse.error('Failed to get connection count', 500, error.message)
+      ApiResponse.error('Failed to get connection count!', 500, error.message)
     );
   }
 });
