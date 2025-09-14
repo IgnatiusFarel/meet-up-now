@@ -10,22 +10,19 @@ export class MeetingService {
     const maxAttempts = 5;
 
     do {
-      meetingCode = Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
+      meetingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       attempts++;
-      
+
       // Check if code already exists
       const existing = await prisma.meeting.findUnique({
         where: { meetingCode },
-        select: { meetingId: true }
+        select: { meetingId: true },
       });
-      
+
       if (!existing) break;
-      
+
       if (attempts >= maxAttempts) {
-        throw new Error('Unable to generate unique meeting code');
+        throw new Error("Unable to generate unique meeting code");
       }
     } while (true);
 
@@ -37,11 +34,11 @@ export class MeetingService {
       },
       include: {
         owner: {
-          select: { 
-            userId: true, 
-            name: true, 
+          select: {
+            userId: true,
+            name: true,
             email: true,
-            avatarUrl: true
+            avatarUrl: true,
           },
         },
         participants: {
@@ -66,15 +63,15 @@ export class MeetingService {
       where: { meetingCode },
       include: {
         owner: {
-          select: { 
-            userId: true, 
-            name: true, 
+          select: {
+            userId: true,
+            name: true,
             email: true,
-            avatarUrl: true
+            avatarUrl: true,
           },
         },
         participants: {
-          where: { leftAt: null }, // Only active participants
+          where: { leftAt: null },
           include: {
             user: {
               select: {
@@ -93,8 +90,12 @@ export class MeetingService {
     if (meeting) {
       meeting.stats = {
         activeParticipants: meeting.participants.length,
-        isOwnerPresent: meeting.participants.some(p => p.userId === meeting.ownerId),
-        duration: meeting.createdAt ? Math.floor((new Date() - meeting.createdAt) / 60000) : 0
+        isOwnerPresent: meeting.participants.some(
+          (p) => p.userId === meeting.ownerId
+        ),
+        duration: meeting.createdAt
+          ? Math.floor((new Date() - meeting.createdAt) / 60000)
+          : 0,
       };
     }
 
@@ -107,20 +108,20 @@ export class MeetingService {
       // Check if meeting exists and is active
       const meeting = await tx.meeting.findUnique({
         where: { meetingCode },
-        select: { 
-          meetingId: true, 
-          endedAt: true, 
+        select: {
+          meetingId: true,
+          endedAt: true,
           title: true,
-          ownerId: true
-        }
+          ownerId: true,
+        },
       });
 
       if (!meeting) {
-        throw new Error('Meeting not found');
+        throw new Error("Meeting not found!");
       }
-      
+
       if (meeting.endedAt) {
-        throw new Error('Meeting has ended');
+        throw new Error("Meeting has ended!");
       }
 
       // Check if user is already in the meeting
@@ -146,40 +147,51 @@ export class MeetingService {
         // Update joinedAt to refresh presence
         await tx.meetingParticipant.update({
           where: { participantId: existingParticipant.participantId },
-          data: { joinedAt: new Date() }
+          data: { joinedAt: new Date() },
         });
-        
+
         return existingParticipant;
       }
 
       // Create new participant
-      return tx.meetingParticipant.create({
-        data: {
-          userId,
-          meetingId: meeting.meetingId,
-          isMicOn: true,
-          isCameraOn: false,
-          isScreenShare: false
-        },
-        include: {
-          user: {
-            select: {
-              userId: true,
-              name: true,
-              email: true,
-              avatarUrl: true,
-            },
-          },
-          meeting: {
-            select: {
-              meetingId: true,
-              meetingCode: true,
-              title: true,
-              ownerId: true
-            }
-          }
-        },
-      });
+     return tx.meetingParticipant.upsert({
+  where: {
+    userId_meetingId: {
+      userId,
+      meetingId: meeting.meetingId,
+    },
+  },
+  update: {
+    joinedAt: new Date(),
+    leftAt: null, // kalau sebelumnya sudah left, reset
+  },
+  create: {
+    userId,
+    meetingId: meeting.meetingId,
+    isMicOn: true,
+    isCameraOn: false,
+    isScreenShare: false,
+  },
+  include: {
+    user: {
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+      },
+    },
+    meeting: {
+      select: {
+        meetingId: true,
+        meetingCode: true,
+        title: true,
+        ownerId: true,
+      },
+    },
+  },
+});
+
     });
   }
 
@@ -187,27 +199,27 @@ export class MeetingService {
     return await prisma.$transaction(async (tx) => {
       // Update participant to mark as left
       const result = await tx.meetingParticipant.updateMany({
-        where: { 
-          userId, 
-          meetingId, 
-          leftAt: null 
+        where: {
+          userId,
+          meetingId,
+          leftAt: null,
         },
         data: { leftAt: new Date() },
       });
 
       // Check if there are any active participants left
       const activeParticipants = await tx.meetingParticipant.count({
-        where: { 
-          meetingId, 
-          leftAt: null 
-        }
+        where: {
+          meetingId,
+          leftAt: null,
+        },
       });
 
       // If no active participants and meeting owner left, auto-end meeting
       if (activeParticipants === 0) {
         await tx.meeting.update({
           where: { meetingId },
-          data: { endedAt: new Date() }
+          data: { endedAt: new Date() },
         });
       }
 
@@ -224,22 +236,22 @@ export class MeetingService {
       });
 
       if (!meeting) {
-        throw new Error('Meeting not found');
+        throw new Error("Meeting not found!");
       }
 
       if (meeting.ownerId !== ownerId) {
-        throw new Error('Only meeting owner can end the meeting');
+        throw new Error("Only meeting owner can end the meeting!");
       }
 
       if (meeting.endedAt) {
-        throw new Error('Meeting already ended');
+        throw new Error("Meeting already ended!");
       }
 
       // End meeting and remove all participants
       await tx.meetingParticipant.updateMany({
-        where: { 
-          meetingId, 
-          leftAt: null 
+        where: {
+          meetingId,
+          leftAt: null,
         },
         data: { leftAt: new Date() },
       });
@@ -249,9 +261,9 @@ export class MeetingService {
         data: { endedAt: new Date() },
         include: {
           owner: {
-            select: { userId: true, name: true, email: true }
-          }
-        }
+            select: { userId: true, name: true, email: true },
+          },
+        },
       });
     });
   }
@@ -260,33 +272,33 @@ export class MeetingService {
     // Validate the meeting is still active
     const meeting = await prisma.meeting.findUnique({
       where: { meetingId },
-      select: { endedAt: true }
+      select: { endedAt: true },
     });
 
     if (!meeting) {
-      throw new Error('Meeting not found');
+      throw new Error("Meeting not found!");
     }
 
     if (meeting.endedAt) {
-      throw new Error('Cannot update status: Meeting has ended');
+      throw new Error("Cannot update status: Meeting has ended!");
     }
 
     return prisma.meetingParticipant.updateMany({
-      where: { 
-        userId, 
-        meetingId, 
-        leftAt: null 
+      where: {
+        userId,
+        meetingId,
+        leftAt: null,
       },
       data: {
         ...updates,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
     });
   }
 
   static async getActiveMeetings(userId, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
-    
+
     const [meetings, total] = await Promise.all([
       prisma.meeting.findMany({
         where: {
@@ -305,11 +317,11 @@ export class MeetingService {
         },
         include: {
           owner: {
-            select: { 
-              userId: true, 
-              name: true, 
+            select: {
+              userId: true,
+              name: true,
               email: true,
-              avatarUrl: true
+              avatarUrl: true,
             },
           },
           participants: {
@@ -326,7 +338,7 @@ export class MeetingService {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
@@ -345,7 +357,7 @@ export class MeetingService {
           ],
           endedAt: null,
         },
-      })
+      }),
     ]);
 
     return {
@@ -356,8 +368,8 @@ export class MeetingService {
         total,
         totalPages: Math.ceil(total / limit),
         hasNext: page * limit < total,
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -380,14 +392,11 @@ export class MeetingService {
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      const shouldExpire = (
-        meeting.participants.length === 0 && 
-        meeting.updatedAt < thirtyMinutesAgo &&
-        !meeting.endedAt
-      ) || (
-        meeting.createdAt < twentyFourHoursAgo && 
-        !meeting.endedAt
-      );
+      const shouldExpire =
+        (meeting.participants.length === 0 &&
+          meeting.updatedAt < thirtyMinutesAgo &&
+          !meeting.endedAt) ||
+        (meeting.createdAt < twentyFourHoursAgo && !meeting.endedAt);
 
       if (shouldExpire) {
         await tx.meeting.update({
@@ -403,35 +412,130 @@ export class MeetingService {
 
   // New method for checking if user can join
   static async checkCanJoin(userId, meetingCode) {
-    const meeting = await this.getMeetingByCode(meetingCode);
-    
-    if (!meeting) {
-      throw new Error('Meeting not found');
-    }
+    try {
+      if (!meetingCode || !/^[A-Z0-9]{6}$/.test(meetingCode)) {
+        return {
+          canJoin: false,
+          reason: "Invalid meeting code format",
+          meeting: null,
+        };
+      }
 
-    if (meeting.endedAt) {
+      const meeting = await prisma.meeting.findUnique({
+        where: { meetingCode },
+        include: {
+          owner: {
+            select: {
+              userId: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          participants: {
+            where: { leftAt: null },
+            include: {
+              user: {
+                select: {
+                  userId: true,
+                  name: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!meeting) {
+        return {
+          canJoin: false,
+          reason: "Meeting not found!",
+          meeting: null,
+        };
+      }
+
+      if (meeting.endedAt) {
+        return {
+          canJoin: false,
+          reason: "Meeting has ended",
+          meeting: {
+            meetingCode: meeting.meetingCode,
+            title: meeting.title,
+            owner: meeting.owner,
+            endedAt: meeting.endedAt,
+          },
+        };
+      }
+
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const isExpiredByInActivity =
+        meeting.participants.length === 0 &&
+        meeting.updatedAt < thirtyMinutesAgo;
+
+      const isExpiredByAge = meeting.createdAt < twentyFourHoursAgo;
+
+      if (isExpiredByInActivity || isExpiredByAge) {
+        await prisma.meeting.update({
+          where: { meetingId: meeting.meetingId },
+          data: { endedAt: new Date() },
+        });
+
+        return {
+          canJoin: false,
+          reason: "Meeting expired",
+          meeting: {
+            meetingCode: meeting.meetingCode,
+            title: meeting.title,
+            owner: meeting.owner,
+            expiredReason: isExpiredByAge
+              ? "Meeting too old (24h+)"
+              : "No activity for 30+ minutes",
+          },
+        };
+      }
+
+      const existingParticipant = meeting.participants.find(
+        (p) => p.userId === userId
+      );
+
+      const duration = Math.floor((new Date() - meeting.createdAt) / 60000);
+
+      let meetingStatus = "waiting";
+
+      if (meeting.participants.length > 0) {
+        const ownerPresent = meeting.participants.some(
+          (p) => p.userId === meeting.ownerId
+        );
+        meetingStatus = ownerPresent ? "active" : "active_no_host";
+      }
+
+      return {
+        canJoin: true,
+        isAlreadyParticipant: !!existingParticipant,
+        meeting: {
+          meetingCode: meeting.meetingCode,
+          title: meeting.title,
+          owner: meeting.owner,
+          participantCount: meeting.participants.length,
+          duration,
+          status: meetingStatus,
+          isOwner: meeting.ownerId === userId,
+          createdAt: meeting.createdAt,
+        },
+      };
+    } catch (error) {
+      console.error("Error is checkCanJoin:", error);
       return {
         canJoin: false,
-        reason: 'Meeting has ended',
-        meeting: null
+        reason: "Failed to check meeting status!",
+        meeting: null,
+        error: error.message,
       };
     }
-
-    const isAlreadyParticipant = meeting.participants.some(
-      p => p.userId === userId
-    );
-
-    return {
-      canJoin: true,
-      isAlreadyParticipant,
-      meeting: {
-        meetingCode: meeting.meetingCode,
-        title: meeting.title,
-        owner: meeting.owner,
-        participantCount: meeting.participants.length,
-        duration: meeting.stats.duration
-      }
-    };
   }
 
   // Enhanced cleanup with better logic
@@ -447,49 +551,49 @@ export class MeetingService {
             // Meetings older than 24 hours
             {
               endedAt: null,
-              createdAt: { lte: twentyFourHoursAgo }
+              createdAt: { lte: twentyFourHoursAgo },
             },
             // Meetings with no participants for over an hour
             {
               endedAt: null,
               updatedAt: { lte: oneHourAgo },
               participants: {
-                none: { leftAt: null }
-              }
-            }
-          ]
+                none: { leftAt: null },
+              },
+            },
+          ],
         },
-        select: { meetingId: true, meetingCode: true, title: true }
+        select: { meetingId: true, meetingCode: true, title: true },
       });
 
       if (expiredMeetings.length === 0) {
         return {
           cleanedCount: 0,
-          message: 'No expired meetings found'
+          message: "No expired meetings found!",
         };
       }
 
       // Mark participants as left
       await tx.meetingParticipant.updateMany({
         where: {
-          meetingId: { in: expiredMeetings.map(m => m.meetingId) },
-          leftAt: null
+          meetingId: { in: expiredMeetings.map((m) => m.meetingId) },
+          leftAt: null,
         },
-        data: { leftAt: new Date() }
+        data: { leftAt: new Date() },
       });
 
       // Mark meetings as ended
       const result = await tx.meeting.updateMany({
         where: {
-          meetingId: { in: expiredMeetings.map(m => m.meetingId) }
+          meetingId: { in: expiredMeetings.map((m) => m.meetingId) },
         },
-        data: { endedAt: new Date() }
+        data: { endedAt: new Date() },
       });
 
       return {
         cleanedCount: result.count,
         cleanedMeetings: expiredMeetings,
-        message: `${result.count} expired meetings cleaned up successfully`
+        message: `${result.count} expired meetings cleaned up successfully!`,
       };
     });
   }
@@ -502,23 +606,23 @@ export class MeetingService {
         participants: {
           include: {
             user: {
-              select: { userId: true, name: true, email: true }
-            }
-          }
-        }
-      }
+              select: { userId: true, name: true, email: true },
+            },
+          },
+        },
+      },
     });
 
     if (!meeting) {
-      throw new Error('Meeting not found');
+      throw new Error("Meeting not found!");
     }
 
     const now = new Date();
-    const duration = meeting.endedAt 
+    const duration = meeting.endedAt
       ? Math.floor((meeting.endedAt - meeting.createdAt) / 60000)
       : Math.floor((now - meeting.createdAt) / 60000);
 
-    const activeParticipants = meeting.participants.filter(p => !p.leftAt);
+    const activeParticipants = meeting.participants.filter((p) => !p.leftAt);
     const totalParticipants = meeting.participants.length;
 
     return {
@@ -526,11 +630,11 @@ export class MeetingService {
       meetingCode: meeting.meetingCode,
       title: meeting.title,
       duration,
-      status: meeting.endedAt ? 'ended' : 'active',
+      status: meeting.endedAt ? "ended" : "active",
       activeParticipants: activeParticipants.length,
       totalParticipants,
       createdAt: meeting.createdAt,
-      endedAt: meeting.endedAt
+      endedAt: meeting.endedAt,
     };
   }
 }
