@@ -1,7 +1,7 @@
-import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { MeetingService } from '#services/meetingService';
+import { Server } from 'socket.io';
 import { ChatService } from '#services/chatService';
+import { MeetingService } from '#services/meetingService';
 
 export class WebSocketService {
   constructor(server) {
@@ -23,7 +23,7 @@ export class WebSocketService {
         const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
         
         if (!token) {
-          throw new Error('Authentication token required');
+          throw new Error('Authentication token required!');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -32,7 +32,7 @@ export class WebSocketService {
         
         next();
       } catch (error) {
-        next(new Error('Authentication failed'));
+        next(new Error('Authentication failed!'));
       }
     });
   }
@@ -273,6 +273,10 @@ export class WebSocketService {
   // Helper method to broadcast to specific meeting
   broadcastToMeeting(meetingId, event, data) {
     this.io.to(`meeting-${meetingId}`).emit(event, data);
+  }
+
+  emitToMeeting(meetingId, event, data) {
+    this.broadcastToMeeting(meetingId, event, data); 
   }
 
   // Get connected users count for a meeting
