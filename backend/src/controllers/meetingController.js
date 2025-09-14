@@ -1,5 +1,5 @@
-import { MeetingService } from '#services/meetingService';
 import { ApiResponse } from '#utils/response';
+import { MeetingService } from '#services/meetingService';
 
 export class MeetingController {
   static async create(req, res) {
@@ -23,9 +23,9 @@ export class MeetingController {
       const meeting = await MeetingService.createMeeting(ownerId, title.trim());
       
       // Emit WebSocket event for real-time updates
-      // if (req.wsService) {
-      //   req.wsService.emitToUser(ownerId, 'meeting:created', meeting);
-      // }
+      if (req.wsService) {
+        req.wsService.emitToMeeting(meeting.meetingId, 'meeting:created', meeting);
+      }
 
       return res.status(201).json(
         ApiResponse.success(meeting, 'Meeting created successfully!')
@@ -95,7 +95,7 @@ export class MeetingController {
         // Notify all participants in the meeting
         req.wsService.emitToMeeting(participant.meetingId, 'participant:joined', {
           participant,
-          message: `${participant.user.name} joined the meeting`
+          message: `${participant.user.name} joined the meeting!`
         });
       }
 
@@ -232,26 +232,54 @@ export class MeetingController {
 
       if (!meetingCode || !/^[A-Z0-9]{6}$/.test(meetingCode)) {
         return res.status(400).json(
-          ApiResponse.badRequest('Invalid meeting code format!')
+          ApiResponse.badRequest('Invalid meeting code format, Please enter a valid 6-character code!')
         );
       }
 
+      console.log(`Checking if user ${userId} can join meeting ${meetingCode}`);      
+
       const result = await MeetingService.checkCanJoin(userId, meetingCode);
+
+     
+      if (!result.canJoin) { 
+        switch (result.reason) {
+          case 'Meeting not found!': 
+          return res.status(404).json(
+            ApiResponse.notFound('Meeting not found, Please check the room code!')
+          );
+
+          case 'Meeting has ended!': 
+          return res.status(410).json(
+            ApiResponse.error('This meeting has already ended!', 410)
+          );
+
+          case 'Meeting expired!': 
+          return res.status(410).json(
+            ApiResponse.error('This meeting has expired due to inactivity!', 410)
+          ); 
+
+          case 'Invalid meeting code format': 
+          return res.status(400).json(
+            ApiResponse.badRequest('Invalid meeting code format!')
+          )
+          
+          default: 
+          return res.status(400).json(
+            ApiResponse.badRequest(result.reason || 'Cannot join this meeting!')
+          )
+        }
+      }
+
+       const responseMessage = result.isAlreadyParticipant ? 'You can rejoin this meeting!' : 'You can join this meeting!';      
       
       return res.status(200).json(
-        ApiResponse.success(result, 'Join check completed!')
+        ApiResponse.success(result, responseMessage)
       );
     } catch (error) {
-      console.error('Check can join error:', error);
+      console.error('Check can join error:', error);      
       
-      if (error.message === 'Meeting not found') {
-        return res.status(404).json(
-          ApiResponse.notFound('Meeting not found!')
-        );
-      }
-      
-      return res.status(500).json(
-        ApiResponse.error('Failed to check join permission!', 500, error.message)
+       return res.status(500).json(
+        ApiResponse.error('Unable to verify meeting status, please try again!', 500, error.message)
       );
     }
   }
@@ -273,4 +301,5 @@ export class MeetingController {
       );
     }
   }
+
 }
