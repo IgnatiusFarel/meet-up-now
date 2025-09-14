@@ -63,6 +63,7 @@ model MeetingParticipant {
 
   joinedAt DateTime @default(now())
   leftAt   DateTime?
+  updatedAt DateTime @updatedAt
 
   @@map("meeting_participants")
   @@unique([userId, meetingId]) // user cuma boleh sekali per meeting
