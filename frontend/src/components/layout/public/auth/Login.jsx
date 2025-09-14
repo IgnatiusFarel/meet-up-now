@@ -50,11 +50,12 @@ const Login = ({ open, onClose }) => {
         htmlType="submit"
         block
         size="large"
-        className="text-[#171717] font-medium h-12 flex items-center justify-center"
+        className="text-[#171717] font-medium h-12 flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 active:shadow-inner"
         onClick={handleLogin}
         loading={loading || isLoading}
         disabled={loading || isLoading}
-      >
+        title="Click to continue with your google account."
+      >        
         {!loading && !isLoading && (
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png"
