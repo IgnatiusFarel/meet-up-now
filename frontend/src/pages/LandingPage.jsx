@@ -34,6 +34,26 @@ const LandingPage = () => {
 
   return (
     <>
+      <head>
+        <title>Meet Up Now</title>
+        <meta
+          name="description"
+          content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
+        />
+        <link rel="icon" href="/MeetUpNow.png" />
+
+        <meta
+          property="og:title"
+          content="Meet Up Now | Connect and Join Meetings Effortlessly"
+        />
+        <meta
+          property="og:description"
+          content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
+        />
+        <meta property="og:image" content="/MeetUpNow.png" />
+        <meta property="og:type" content="website" />
+      </head>
+      
       <Navbar />
       <main>
         <section id="home">
@@ -58,7 +78,6 @@ const LandingPage = () => {
 
         <Footer />
       </main>
-
       {showButtonUp && (
         <div className="fixed bottom-6 right-6 z-50">
           <ElectricBorder
