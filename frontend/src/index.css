@@ -115,6 +115,13 @@ html {
   transform: scale(1.2);
 }
 
+.custom-spin .ant-spin-dot-item {
+  background-color: white !important;
+}
+
+.custom-spin .ant-spin-text {
+  color: white !important;
+}
 
 
 
