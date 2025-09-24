@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@heroicons/react": "^2.2.0",
+    "@sidekickicons/react": "^0.14.0",
     "axios": "^1.11.0",
     "dayjs": "^1.11.13",
     "gsap": "^3.13.0",
@@ -19,6 +21,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.1",
+    "socket.io-client": "^4.8.1",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
