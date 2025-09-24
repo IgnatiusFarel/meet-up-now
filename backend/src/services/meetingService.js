@@ -4,34 +4,52 @@ const prisma = new PrismaClient();
 
 export class MeetingService {
   static async createMeeting(ownerId, title) {
-    // Generate unique meeting code with retry mechanism
-    let meetingCode;
-    let attempts = 0;
-    const maxAttempts = 5;
+  // Generate unique meeting code with retry mechanism
+  let meetingCode;
+  let attempts = 0;
+  const maxAttempts = 5;
 
-    do {
-      meetingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      attempts++;
+  do {
+    meetingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    attempts++;
 
-      // Check if code already exists
-      const existing = await prisma.meeting.findUnique({
-        where: { meetingCode },
-        select: { meetingId: true },
-      });
+    // Check if code already exists
+    const existing = await prisma.meeting.findUnique({
+      where: { meetingCode },
+      select: { meetingId: true },
+    });
 
-      if (!existing) break;
+    if (!existing) break;
 
-      if (attempts >= maxAttempts) {
-        throw new Error("Unable to generate unique meeting code");
-      }
-    } while (true);
+    if (attempts >= maxAttempts) {
+      throw new Error("Unable to generate unique meeting code");
+    }
+  } while (true);
 
-    return prisma.meeting.create({
+  return await prisma.$transaction(async (tx) => {
+    // Create the meeting
+    const meeting = await tx.meeting.create({
       data: {
         meetingCode,
         ownerId,
         title,
       },
+    });
+
+    // Automatically add owner as first participant
+    await tx.meetingParticipant.create({
+      data: {
+        userId: ownerId,
+        meetingId: meeting.meetingId,
+        isMicOn: true,
+        isCameraOn: false,
+        isScreenShare: false,
+      },
+    });
+
+    // Return meeting with participants included
+    return await tx.meeting.findUnique({
+      where: { meetingId: meeting.meetingId },
       include: {
         owner: {
           select: {
@@ -56,7 +74,8 @@ export class MeetingService {
         },
       },
     });
-  }
+  });
+}
 
   static async getMeetingByCode(meetingCode) {
     const meeting = await prisma.meeting.findUnique({
@@ -102,34 +121,69 @@ export class MeetingService {
     return meeting;
   }
 
-  static async joinMeeting(userId, meetingCode) {
-    // Use transaction for data consistency
-    return await prisma.$transaction(async (tx) => {
-      // Check if meeting exists and is active
-      const meeting = await tx.meeting.findUnique({
-        where: { meetingCode },
-        select: {
-          meetingId: true,
-          endedAt: true,
-          title: true,
-          ownerId: true,
+static async joinMeeting(userId, meetingCode) {
+  // Use transaction for data consistency
+  return await prisma.$transaction(async (tx) => {
+    // Check if meeting exists and is active
+    const meeting = await tx.meeting.findUnique({
+      where: { meetingCode },
+      select: {
+        meetingId: true,
+        endedAt: true,
+        title: true,
+        ownerId: true,
+      },
+    });
+
+    if (!meeting) {
+      throw new Error("Meeting not found!");
+    }
+
+    if (meeting.endedAt) {
+      throw new Error("Meeting has ended!");
+    }
+
+    // Check for ANY existing participant record for this user in this meeting
+    const existingParticipant = await tx.meetingParticipant.findFirst({
+      where: {
+        userId,
+        meetingId: meeting.meetingId,
+      },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
         },
-      });
+        meeting: {
+          select: {
+            meetingId: true,
+            meetingCode: true,
+            title: true,
+            ownerId: true,
+          },
+        },
+      },
+      orderBy: {
+        joinedAt: 'desc', // Get the most recent entry
+      },
+    });
 
-      if (!meeting) {
-        throw new Error("Meeting not found!");
-      }
-
-      if (meeting.endedAt) {
-        throw new Error("Meeting has ended!");
-      }
-
-      // Check if user is already in the meeting
-      const existingParticipant = await tx.meetingParticipant.findFirst({
-        where: {
-          userId,
-          meetingId: meeting.meetingId,
-          leftAt: null,
+    if (existingParticipant) {
+      // If user has an existing record, update it to rejoin (reset leftAt)
+      const updatedParticipant = await tx.meetingParticipant.update({
+        where: { 
+          participantId: existingParticipant.participantId 
+        },
+        data: { 
+          joinedAt: new Date(),
+          leftAt: null, // Reset leftAt to mark as active
+          isMicOn: true,
+          isCameraOn: false,
+          isScreenShare: false,
         },
         include: {
           user: {
@@ -140,60 +194,50 @@ export class MeetingService {
               avatarUrl: true,
             },
           },
+          meeting: {
+            select: {
+              meetingId: true,
+              meetingCode: true,
+              title: true,
+              ownerId: true,
+            },
+          },
         },
       });
 
-      if (existingParticipant) {
-        // Update joinedAt to refresh presence
-        await tx.meetingParticipant.update({
-          where: { participantId: existingParticipant.participantId },
-          data: { joinedAt: new Date() },
-        });
+      return updatedParticipant;
+    }
 
-        return existingParticipant;
-      }
-
-      // Create new participant
-     return tx.meetingParticipant.upsert({
-  where: {
-    userId_meetingId: {
-      userId,
-      meetingId: meeting.meetingId,
-    },
-  },
-  update: {
-    joinedAt: new Date(),
-    leftAt: null, // kalau sebelumnya sudah left, reset
-  },
-  create: {
-    userId,
-    meetingId: meeting.meetingId,
-    isMicOn: true,
-    isCameraOn: false,
-    isScreenShare: false,
-  },
-  include: {
-    user: {
-      select: {
-        userId: true,
-        name: true,
-        email: true,
-        avatarUrl: true,
+    // Create new participant only if no existing record found
+    return await tx.meetingParticipant.create({
+      data: {
+        userId,
+        meetingId: meeting.meetingId,
+        isMicOn: true,
+        isCameraOn: false,
+        isScreenShare: false,
       },
-    },
-    meeting: {
-      select: {
-        meetingId: true,
-        meetingCode: true,
-        title: true,
-        ownerId: true,
+      include: {
+        user: {
+          select: {
+            userId: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        meeting: {
+          select: {
+            meetingId: true,
+            meetingCode: true,
+            title: true,
+            ownerId: true,
+          },
+        },
       },
-    },
-  },
-});
-
     });
-  }
+  });
+}
 
   static async leaveMeeting(userId, meetingId) {
     return await prisma.$transaction(async (tx) => {
