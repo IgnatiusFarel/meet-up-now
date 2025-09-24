@@ -11,7 +11,7 @@ const AUTH_CONSTANTS = {
     TOKEN: "authToken",
     USER_DATA: "userData", 
     TOKEN_EXPIRY: "tokenExpiry",
-    REFRESH_TOKEN: "refreshToken",
+    // REMOVED: REFRESH_TOKEN - it's now only in httpOnly cookies
     STORE: "auth-store"
   }
 };
@@ -63,14 +63,43 @@ const calculateTokenExpiry = (hours = AUTH_CONSTANTS.TOKEN_EXPIRY_HOURS) => {
 const isTokenExpired = (tokenExpiry) => {
   if (!tokenExpiry) return true;
   const now = new Date();
-  return new Date(tokenExpiry) <= now;
+  const expiry = tokenExpiry instanceof Date ? tokenExpiry : new Date(tokenExpiry);
+  return expiry <= now;
 };
 
 const isTokenExpiringSoon = (tokenExpiry, thresholdMinutes = AUTH_CONSTANTS.REFRESH_THRESHOLD_MINUTES) => {
   if (!tokenExpiry) return true;
   const now = new Date();
-  const timeDiff = new Date(tokenExpiry).getTime() - now.getTime();
+  const expiry = tokenExpiry instanceof Date ? tokenExpiry : new Date(tokenExpiry);
+  const timeDiff = expiry.getTime() - now.getTime();
   return timeDiff < thresholdMinutes * 60 * 1000;
+};
+
+// FIXED: Enhanced localStorage sync functions
+const syncToLocalStorage = (key, value) => {
+  try {
+    if (value === null || value === undefined) {
+      localStorage.removeItem(key);
+    } else {
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, stringValue);
+    }
+    return true;
+  } catch (error) {
+    console.error(`Failed to sync ${key} to localStorage:`, error);
+    return false;
+  }
+};
+
+const getFromLocalStorage = (key, isJson = false) => {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return null;
+    return isJson ? JSON.parse(value) : value;
+  } catch (error) {
+    console.warn(`Failed to get ${key} from localStorage:`, error);
+    return null;
+  }
 };
 
 // ============ ZUSTAND STORE WITH FIXES ============
@@ -82,7 +111,7 @@ const useAuthStore = create(
           // ============ STATE ============
           user: null,
           token: null,
-          refreshToken: null,
+          // REMOVED: refreshToken - now only exists in httpOnly cookies
           isAuthenticated: false,
           isLoading: false,
           error: null,
@@ -90,19 +119,18 @@ const useAuthStore = create(
           lastLoginTime: null,
           tokenExpiry: null,
           isInitialized: false,
-          _isInitializing: false, // Prevent multiple concurrent inits
+          _isInitializing: false,
 
           // ============ FIXED INITIALIZATION ============
           initializeAuth: async () => {
             const currentState = get();
             
-            // Prevent multiple concurrent initializations
             if (currentState._isInitializing || currentState.isInitialized) {
-              console.log("🔄 Auth already initializing or initialized, skipping");
+              console.log("Auth already initializing or initialized, skipping");
               return;
             }
 
-            console.log("🔄 Initializing authentication...");
+            console.log("Initializing authentication...");
             
             set((state) => {
               state._isInitializing = true;
@@ -111,21 +139,20 @@ const useAuthStore = create(
             });
 
             try {
-              // Get fresh data from localStorage (not from persisted state)
-              const token = localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
-              const userData = localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA);
-              const tokenExpiry = localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY);
+              // CRITICAL: Get fresh data from localStorage (not refreshToken)
+              const token = getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
+              const userData = getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, true);
+              const tokenExpiry = getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY);
 
-              console.log("📊 Auth data check:", {
+              console.log("Auth data check:", {
                 hasToken: !!token,
                 hasUserData: !!userData,
                 tokenExpiry: tokenExpiry,
-                tokenLength: token?.length
+                // No refreshToken check - it's in httpOnly cookies
               });
 
-              // If no token, just mark as initialized (not authenticated)
               if (!token) {
-                console.log("❌ No token found, marking as not authenticated");
+                console.log("No token found, marking as not authenticated");
                 set((state) => {
                   state.isAuthenticated = false;
                   state.user = null;
@@ -138,32 +165,23 @@ const useAuthStore = create(
                 return;
               }
 
-              // Parse user data - be more lenient here
-              const rawUserData = safeJsonParse(userData);
-              const actualUser = extractUserData(rawUserData);
-
-              // Check if token is expired
+              const actualUser = extractUserData(userData);
               const parsedExpiry = tokenExpiry ? new Date(tokenExpiry) : null;
-              const now = new Date();
-              
-              console.log("🕐 Token expiry check:", {
+
+              console.log("Token expiry check:", {
                 expiry: parsedExpiry,
-                now: now,
-                isExpired: parsedExpiry ? parsedExpiry <= now : true,
-                minutesLeft: parsedExpiry ? Math.floor((parsedExpiry - now) / 60000) : 0
+                isExpired: parsedExpiry ? isTokenExpired(parsedExpiry) : true,
               });
 
               // If token is expired, try to refresh
-              if (!parsedExpiry || isTokenExpired(tokenExpiry)) {
-                console.log("🔄 Token expired, attempting refresh...");
+              if (!parsedExpiry || isTokenExpired(parsedExpiry)) {
+                console.log("Token expired, attempting refresh...");
                 
                 try {
-                  // Temporarily set the expired token to make the refresh call
                   setApiAuthHeader(token);
-                  await get().refreshAuthToken();
-                  console.log("✅ Token refreshed during initialization");
+                  const newToken = await get().refreshAuthToken();
+                  console.log("Token refreshed during initialization");
                   
-                  // Mark as initialized after successful refresh
                   set((state) => {
                     state.isInitialized = true;
                     state.isLoading = false;
@@ -171,21 +189,14 @@ const useAuthStore = create(
                   });
                   return;
                 } catch (refreshError) {
-                  console.log("❌ Token refresh failed during init:", refreshError.message);
-                  // Don't clear everything, just mark as not authenticated
+                  console.log("Token refresh failed during init:", refreshError.message);
+                  // Clear everything and mark as not authenticated
+                  await get().clearAuth();
                   set((state) => {
-                    state.isAuthenticated = false;
-                    state.user = null;
-                    state.token = null;
-                    state.tokenExpiry = null;
                     state.isInitialized = true;
                     state.isLoading = false;
                     state._isInitializing = false;
                   });
-                  
-                  // Clear localStorage but don't clear persisted state yet
-                  localStorage.removeItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
-                  clearApiAuthHeader();
                   return;
                 }
               }
@@ -202,25 +213,16 @@ const useAuthStore = create(
               });
 
               setApiAuthHeader(token);
-              console.log("✅ Auth state restored from localStorage");
-
-              // Optional: Validate with server (but don't fail initialization if this fails)
-              try {
-                const validatedUser = await get().getCurrentUser();
-                console.log("✅ Token validated with server");
-              } catch (validationError) {
-                console.warn("⚠️ Server validation failed, but keeping local auth:", validationError.message);
-                // Don't clear auth here - let the user try to use the app
-              }
+              console.log("Auth state restored from localStorage");
 
             } catch (error) {
-              console.error("❌ Auth initialization error:", error);
+              console.error("Auth initialization error:", error);
               
-              // On any error, just mark as not authenticated but initialized
               set((state) => {
                 state.isAuthenticated = false;
                 state.user = null;
                 state.token = null;
+                state.refreshToken = null;
                 state.tokenExpiry = null;
                 state.isInitialized = true;
                 state.isLoading = false;
@@ -231,58 +233,58 @@ const useAuthStore = create(
 
           // ============ FIXED TOKEN REFRESH ============
           refreshAuthToken: async () => {
-            console.log("🔄 Refreshing authentication token...");
+            console.log("Refreshing authentication token...");
             
             try {
+              // Use Api service which handles httpOnly cookies properly
               const response = await Api.post("/auth/refresh");
-              console.log("📡 Refresh response:", response.data);
+              console.log("Refresh response:", response.data);
 
               if (response.data?.success) {
-                const { user, accessToken } = response.data.data;
+                const { user, accessToken, refreshToken: newRefreshToken } = response.data.data;
                 
                 if (!accessToken) {
                   throw new Error("No access token in refresh response");
                 }
 
-                // Update auth data with new token
-                const success = get().setAuthData(user, accessToken);
+                console.log("Token refresh data:", {
+                  hasUser: !!user,
+                  hasAccessToken: !!accessToken,
+                  hasRefreshToken: !!newRefreshToken,
+                });
+
+                // CRITICAL: Update both store AND localStorage immediately
+                const success = get().setAuthData(user, accessToken, newRefreshToken);
                 
                 if (!success) {
                   throw new Error("Failed to set auth data after refresh");
                 }
 
-                console.log("✅ Token refreshed successfully");
+                console.log("Token refreshed successfully");
                 return accessToken;
               } else {
                 throw new Error(response.data?.message || "Token refresh failed");
               }
             } catch (error) {
-              console.error("❌ Token refresh failed:", error);
+              console.error("Token refresh failed:", error);
               
-              // On refresh failure, clear auth but don't throw immediately
-              set((state) => {
-                state.isAuthenticated = false;
-                state.user = null;
-                state.token = null;
-                state.tokenExpiry = null;
-              });
-              
-              // Clear localStorage and API headers
-              localStorage.removeItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
-              localStorage.removeItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA);
-              localStorage.removeItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY);
-              clearApiAuthHeader();
-              
+              // On refresh failure, clear everything
+              await get().clearAuth();
               throw error;
             }
           },
 
-          // ============ IMPROVED AUTH DATA SETTER ============
+          // ============ FIXED AUTH DATA SETTER ============
           setAuthData: (user, accessToken, refreshToken = null) => {
-            console.log("🔄 Setting authentication data...");
+            console.log("Setting authentication data...", {
+              hasUser: !!user,
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
+              userEmail: user?.email
+            });
 
             if (!accessToken) {
-              console.error("❌ No access token provided");
+              console.error("No access token provided");
               return false;
             }
 
@@ -290,87 +292,93 @@ const useAuthStore = create(
             const expiryTime = calculateTokenExpiry();
 
             try {
-              // Update localStorage first
-              localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN, accessToken);
-              localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toISOString());
-              
-              if (actualUser) {
-                localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, JSON.stringify(actualUser));
-              }
-              
-              if (refreshToken) {
-                localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+              // CRITICAL: Update localStorage FIRST before updating store
+              const syncResults = {
+                token: syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN, accessToken),
+                expiry: syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toISOString()),
+                user: actualUser ? syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, actualUser) : true,
+                refreshToken: refreshToken ? syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.REFRESH_TOKEN, refreshToken) : true,
+              };
+
+              console.log("LocalStorage sync results:", syncResults);
+
+              if (!syncResults.token || !syncResults.expiry) {
+                throw new Error("Failed to sync critical auth data to localStorage");
               }
 
-              console.log("💾 Auth data saved to localStorage");
+              // Set API authorization header
+              setApiAuthHeader(accessToken);
+
+              // Update store state AFTER localStorage is updated
+              set((state) => {
+                state.user = actualUser;
+                state.token = accessToken;
+                state.refreshToken = refreshToken || state.refreshToken;
+                state.tokenExpiry = expiryTime;
+                state.isAuthenticated = true;
+                state.isLoading = false;
+                state.error = null;
+                state.lastLoginTime = new Date();
+                state.loginAttempts = 0;
+              });
+
+              console.log("Authentication data set successfully:", {
+                userEmail: actualUser?.email,
+                hasToken: !!accessToken,
+                tokenLength: accessToken?.length,
+                localStorageCheck: {
+                  hasToken: !!localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN),
+                  hasUser: !!localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA),
+                  hasExpiry: !!localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY)
+                }
+              });
+
+              return true;
             } catch (error) {
-              console.error("❌ Failed to save auth data to localStorage:", error);
+              console.error("Failed to set auth data:", error);
               return false;
             }
-
-            // Update store state - this will trigger persist
-            set((state) => {
-              state.user = actualUser;
-              state.token = accessToken;
-              state.refreshToken = refreshToken || state.refreshToken;
-              state.tokenExpiry = expiryTime;
-              state.isAuthenticated = true;
-              state.isLoading = false;
-              state.error = null;
-              state.lastLoginTime = new Date();
-              state.loginAttempts = 0;
-            });
-
-            // Set API authorization header
-            setApiAuthHeader(accessToken);
-
-            console.log("✅ Authentication data set successfully:", {
-              userEmail: actualUser?.email,
-              hasToken: !!accessToken,
-              tokenLength: accessToken?.length
-            });
-
-            return true;
           },
 
           // ============ IMPROVED CLEAR AUTH ============
           clearAuth: async () => {
-            console.log("🧹 Clearing authentication data...");
+            console.log("Clearing authentication data...");
 
             // Clear API headers first
             clearApiAuthHeader();
 
-            // Clear localStorage
+            // Clear localStorage (no refreshToken to clear)
             Object.values(AUTH_CONSTANTS.STORAGE_KEYS).forEach(key => {
-              try {
-                localStorage.removeItem(key);
-              } catch (error) {
-                console.warn(`Failed to remove ${key} from localStorage:`, error);
+              if (key !== AUTH_CONSTANTS.STORAGE_KEYS.STORE) {
+                try {
+                  localStorage.removeItem(key);
+                } catch (error) {
+                  console.warn(`Failed to remove ${key} from localStorage:`, error);
+                }
               }
             });
 
-            // Reset store state - this will also update the persisted state
+            // Reset store state
             set((state) => {
               state.user = null;
               state.token = null;
-              state.refreshToken = null;
+              // No refreshToken to clear
               state.isAuthenticated = false;
               state.isLoading = false;
               state.error = null;
               state.tokenExpiry = null;
               state.lastLoginTime = null;
-              // Keep isInitialized and loginAttempts
             });
 
-            console.log("✅ Authentication data cleared");
+            console.log("Authentication data cleared");
           },
 
           // ============ IMPROVED CURRENT USER ============
           getCurrentUser: async () => {
-            console.log("🔄 Fetching current user profile...");
+            console.log("Fetching current user profile...");
             
             try {
-              const currentToken = get().token || localStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
+              const currentToken = get().token || getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
               
               if (!currentToken) {
                 throw new Error("No authentication token available");
@@ -381,7 +389,7 @@ const useAuthStore = create(
               }
 
               const response = await Api.get("/auth/me");
-              console.log("📡 User profile response:", response.data);
+              console.log("User profile response:", response.data);
 
               if (response.data?.success) {
                 const rawUserData = response.data.data;
@@ -395,31 +403,26 @@ const useAuthStore = create(
                     state.error = null;
                   });
 
-                  try {
-                    localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, JSON.stringify(actualUser));
-                  } catch (error) {
-                    console.warn("Failed to update localStorage user data:", error);
-                  }
+                  syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, actualUser);
                   
-                  console.log("✅ User profile updated successfully");
+                  console.log("User profile updated successfully");
                   return actualUser;
                 }
               }
               
               throw new Error(response.data?.message || "Failed to fetch user profile");
             } catch (error) {
-              console.error("❌ Get current user failed:", error);
+              console.error("Get current user failed:", error);
 
               // Only clear auth on 401, not on network errors
               if (error.response?.status === 401) {
-                console.log("🔐 Unauthorized - token invalid");
+                console.log("Unauthorized - attempting token refresh");
                 
-                // Try refresh once
                 try {
                   await get().refreshAuthToken();
                   return await get().getCurrentUser();
                 } catch (refreshError) {
-                  console.log("❌ Token refresh failed, clearing auth");
+                  console.log("Token refresh failed, clearing auth");
                   await get().clearAuth();
                   throw new Error("Authentication failed - please login again");
                 }
@@ -440,7 +443,7 @@ const useAuthStore = create(
 
           // ============ OAUTH METHODS ============
           startGoogleLogin: async () => {
-            console.log("🚀 Starting Google OAuth login...");
+            console.log("Starting Google OAuth login...");
 
             set((state) => {
               state.isLoading = true;
@@ -456,14 +459,14 @@ const useAuthStore = create(
               const authUrl = response.data?.data?.authUrl;
 
               if (response.data?.success && authUrl) {
-                console.log("🔗 Redirecting to Google OAuth");
+                console.log("Redirecting to Google OAuth");
                 window.location.href = authUrl;
                 return;
               } else {
                 throw new Error(response.data?.message || "Failed to get Google OAuth URL");
               }
             } catch (error) {
-              console.error("❌ Google OAuth initiation failed:", error);
+              console.error("Google OAuth initiation failed:", error);
               
               set((state) => {
                 state.isLoading = false;
@@ -474,8 +477,9 @@ const useAuthStore = create(
             }
           },
 
+          // ============ FIXED OAUTH CALLBACK ============
           handleOAuthCallback: async (accessToken) => {
-            console.log("🔄 Processing OAuth callback...");
+            console.log("Processing OAuth callback...");
 
             if (!accessToken) {
               const error = "Missing access token";
@@ -492,18 +496,23 @@ const useAuthStore = create(
             });
 
             try {
+              // Set the token first so we can make API calls
               setApiAuthHeader(accessToken);
+              
+              // Get user data from the /me endpoint
               const response = await Api.get("/auth/me");
 
               if (response.data?.success) {
                 const userData = response.data.data;
+                
+                // CRITICAL: Set auth data properly
                 const success = get().setAuthData(userData, accessToken);
                 
                 if (!success) {
                   throw new Error("Failed to set authentication data");
                 }
 
-                console.log("✅ OAuth authentication successful");
+                console.log("OAuth authentication successful");
                 
                 return {
                   success: true,
@@ -514,7 +523,7 @@ const useAuthStore = create(
                 throw new Error(response.data?.message || "Failed to fetch user data");
               }
             } catch (error) {
-              console.error("❌ OAuth callback error:", error);
+              console.error("OAuth callback error:", error);
 
               const errorMessage = error.response?.data?.message || 
                                    error.message || 
@@ -544,13 +553,13 @@ const useAuthStore = create(
             }
 
             if (isTokenExpiringSoon(tokenExpiry)) {
-              console.log("🔄 Token expiring soon, refreshing...");
+              console.log("Token expiring soon, refreshing...");
               
               try {
                 await get().refreshAuthToken();
                 return true;
               } catch (error) {
-                console.error("❌ Auto-refresh failed:", error);
+                console.error("Auto-refresh failed:", error);
                 return false;
               }
             }
@@ -559,7 +568,7 @@ const useAuthStore = create(
           },
 
           updateUserProfile: async (userData) => {
-            console.log("🔄 Updating user profile...");
+            console.log("Updating user profile...");
             
             set((state) => {
               state.isLoading = true;
@@ -578,15 +587,15 @@ const useAuthStore = create(
                   state.isLoading = false;
                 });
 
-                localStorage.setItem(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, JSON.stringify(actualUser));
+                syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, actualUser);
                 
-                console.log("✅ Profile updated successfully");
+                console.log("Profile updated successfully");
                 return actualUser;
               } else {
                 throw new Error(response.data?.message || "Profile update failed");
               }
             } catch (error) {
-              console.error("❌ Profile update failed:", error);
+              console.error("Profile update failed:", error);
               
               const errorMessage = error.response?.data?.message || 
                                    error.message || 
@@ -602,7 +611,7 @@ const useAuthStore = create(
           },
 
           logout: async () => {
-            console.log("🚪 Logging out user...");
+            console.log("Logging out user...");
 
             set((state) => {
               state.isLoading = true;
@@ -610,12 +619,12 @@ const useAuthStore = create(
 
             try {
               await Api.post("/auth/logout");
-              console.log("📡 Logout API call successful");
+              console.log("Logout API call successful");
             } catch (error) {
-              console.warn("⚠️ Logout API call failed (proceeding anyway):", error.message);
+              console.warn("Logout API call failed (proceeding anyway):", error.message);
             } finally {
               await get().clearAuth();
-              console.log("✅ Logout completed");
+              console.log("Logout completed");
             }
           },
 
@@ -652,26 +661,85 @@ const useAuthStore = create(
       ),
       {
         name: AUTH_CONSTANTS.STORAGE_KEYS.STORE,
-        // More selective persistence to avoid state conflicts
+        // More selective persistence to avoid conflicts
         partialize: (state) => ({
           user: state.user,
           token: state.token,
-          refreshToken: state.refreshToken,
-          tokenExpiry: state.tokenExpiry,
+          // No refreshToken - it's in httpOnly cookies only
+          tokenExpiry: state.tokenExpiry instanceof Date ? state.tokenExpiry.toISOString() : state.tokenExpiry,
           isAuthenticated: state.isAuthenticated,
-          lastLoginTime: state.lastLoginTime,
+          lastLoginTime: state.lastLoginTime instanceof Date ? state.lastLoginTime.toISOString() : state.lastLoginTime,
           loginAttempts: state.loginAttempts,
           isInitialized: state.isInitialized
         }),
-        // Add version to handle schema changes
-        version: 1,
-        // Handle state restoration more carefully
+        version: 2, // Increment version to clear old data
         onRehydrateStorage: () => (state) => {
           if (state) {
-            console.log("🔄 Rehydrating auth store from persist");
-            // Reset loading and initialization flags on rehydration
+            console.log("Rehydrating auth store from persist");
+            // Reset loading and initialization flags
             state.isLoading = false;
             state._isInitializing = false;
+            
+            // Convert string dates back to Date objects
+            if (state.tokenExpiry && typeof state.tokenExpiry === 'string') {
+              state.tokenExpiry = new Date(state.tokenExpiry);
+            }
+            if (state.lastLoginTime && typeof state.lastLoginTime === 'string') {
+              state.lastLoginTime = new Date(state.lastLoginTime);
+            }
+            
+            // Validate localStorage sync after rehydration
+            setTimeout(() => {
+              const localToken = getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN);
+              const localUser = getFromLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, true);
+              
+              console.log("Post-rehydration localStorage check:", {
+                storeHasToken: !!state.token,
+                localHasToken: !!localToken,
+                storeHasUser: !!state.user,
+                localHasUser: !!localUser,
+                tokensMatch: state.token === localToken,
+                tokenExpiry: state.tokenExpiry,
+                tokenExpiryType: typeof state.tokenExpiry
+                // No refreshToken checks - it's secure in httpOnly cookies
+              });
+              
+              // Fix tokenExpiry if it's a string
+              if (state.tokenExpiry && typeof state.tokenExpiry === 'string') {
+                try {
+                  state.tokenExpiry = new Date(state.tokenExpiry);
+                  console.log("Fixed tokenExpiry to Date object");
+                } catch (error) {
+                  console.warn("Failed to parse tokenExpiry:", error);
+                  state.tokenExpiry = null;
+                }
+              }
+              
+              // If tokens don't match, use localStorage as source of truth
+              if (state.token !== localToken) {
+                if (localToken) {
+                  console.log("Token mismatch - using localStorage token");
+                  state.token = localToken;
+                  setApiAuthHeader(localToken);
+                } else if (state.token) {
+                  console.log("Syncing store token to localStorage");
+                  syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN, state.token);
+                }
+              }
+              
+              // Sync missing data
+              if (state.user && !localUser) {
+                console.log("Syncing missing user data to localStorage");
+                syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.USER_DATA, state.user);
+              }
+              
+              if (state.tokenExpiry) {
+                const expiryString = state.tokenExpiry instanceof Date 
+                  ? state.tokenExpiry.toISOString() 
+                  : state.tokenExpiry;
+                syncToLocalStorage(AUTH_CONSTANTS.STORAGE_KEYS.TOKEN_EXPIRY, expiryString);
+              }
+            }, 100);
           }
         }
       }
