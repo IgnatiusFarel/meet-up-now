@@ -24,8 +24,7 @@ export class AuthController {
         );
     }
   }
-
-  // Alternative: Return JSON instead of redirect // Perbaiki AuthController.googleCallback dengan logging
+  
   static async googleCallback(req, res) {
     try {
       console.log("🔄 Google callback received:", req.query);
@@ -79,7 +78,11 @@ export class AuthController {
 
   static async refreshToken(req, res) {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      let refreshToken = req.cookies.refreshToken;
+
+      if (!refreshToken && req.body.refreshAccessToken) {
+        refreshToken = req.body.refreshToken; 
+      }
 
       if (!refreshToken) {
         return res
@@ -87,13 +90,32 @@ export class AuthController {
           .json(ApiResponse.unauthorized("Refresh token is required!"));
       }
 
+      console.log("🔄 Refreshing access token with refresh token");
+
       const result = await AuthService.refreshAccessToken(refreshToken);
+
+      const { accessToken, refreshToken: newRefreshToken } = AuthService.generateTokens(result.user ||{
+        userId: result.user.userId, 
+        email: result.user.email, 
+        name: result.user.name, 
+        role: result.user.role || 'user'
+      });
+
+      res.cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      console.log("✅ Token refresh successful");
 
       return res.status(200).json(
         ApiResponse.success(
           {
             user: result.user,
             accessToken: result.accessToken,
+            refreshToken: newRefreshToken, 
           },
           "Token refreshed successfully!"
         )
