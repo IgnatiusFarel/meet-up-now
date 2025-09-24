@@ -39,6 +39,9 @@ export default function ThemeProvider({ children }) {
             optionSelectedBg: "#DFDFDF",
             optionLineHeight: 1.5,
             borderRadius: 20
+          },
+          Spin: {
+             dotSpinDotItemBg: "#fff",              
           }
         },
       }}
