@@ -4,8 +4,40 @@ const prisma = new PrismaClient();
 
 export class ParticipantService {
   // Get all active participants in a meeting
-  static async getActiveParticipants(meetingId) {
-    return prisma.meetingParticipant.findMany({
+  static async getActiveParticipants(meetingId, requesterId) {
+    // First verify the meeting exists
+    const meeting = await prisma.meeting.findUnique({
+      where: { meetingId },
+      select: { 
+        meetingId: true, 
+        ownerId: true,
+        endedAt: true 
+      },
+    });
+
+    if (!meeting) {
+      throw new Error('Meeting not found');
+    }
+
+    if (meeting.endedAt) {
+      throw new Error('Meeting has ended');
+    }
+
+    // Check if requester is participant or owner
+    const requesterIsParticipant = await prisma.meetingParticipant.findFirst({
+      where: {
+        meetingId,
+        userId: requesterId,
+        leftAt: null, // Only active participants
+      },
+    });
+
+    if (!requesterIsParticipant && meeting.ownerId !== requesterId) {
+      throw new Error('Not authorized to view participants');
+    }
+
+    // Get unique active participants (eliminate duplicates)
+    const participants = await prisma.meetingParticipant.findMany({
       where: {
         meetingId,
         leftAt: null, // Only active participants
@@ -21,13 +53,39 @@ export class ParticipantService {
         },
       },
       orderBy: {
-        joinedAt: 'asc',
+        joinedAt: 'desc', // Most recent join first
       },
     });
-  }
 
+    // Remove duplicates by keeping only the most recent entry per user
+    const uniqueParticipants = [];
+    const seenUserIds = new Set();
+
+    for (const participant of participants) {
+      if (!seenUserIds.has(participant.userId)) {
+        uniqueParticipants.push(participant);
+        seenUserIds.add(participant.userId);
+      }
+    }
+
+    return uniqueParticipants;
+  }
   // Update participant media status (mic, camera, screen share)
-  static async updateParticipantMediaStatus(userId, meetingId, updates) {
+ static async updateMediaStatus(meetingId, userId, updates) {
+    // Validate meeting exists and is active
+    const meeting = await prisma.meeting.findUnique({
+      where: { meetingId },
+      select: { endedAt: true },
+    });
+
+    if (!meeting) {
+      throw new Error('Meeting not found');
+    }
+
+    if (meeting.endedAt) {
+      throw new Error('Meeting has ended');
+    }
+
     // Validate updates
     const allowedUpdates = ['isMicOn', 'isCameraOn', 'isScreenShare'];
     const filteredUpdates = {};
@@ -40,6 +98,22 @@ export class ParticipantService {
 
     if (Object.keys(filteredUpdates).length === 0) {
       throw new Error('No valid updates provided');
+    }
+
+    // Get the most recent active participant record for this user
+    const activeParticipant = await prisma.meetingParticipant.findFirst({
+      where: {
+        userId,
+        meetingId,
+        leftAt: null,
+      },
+      orderBy: {
+        joinedAt: 'desc',
+      },
+    });
+
+    if (!activeParticipant) {
+      throw new Error('Participant not found in meeting');
     }
 
     // Special handling for screen share - only one person can share at a time
@@ -55,27 +129,63 @@ export class ParticipantService {
       });
     }
 
-    // Update the participant
-    const updated = await prisma.meetingParticipant.updateMany({
+    // Update the specific participant record
+    const updated = await prisma.meetingParticipant.update({
       where: {
-        userId,
-        meetingId,
-        leftAt: null,
+        participantId: activeParticipant.participantId,
       },
       data: {
         ...filteredUpdates,
-        // Update timestamp when status changes
-        ...(Object.keys(filteredUpdates).length > 0 && {
-          updatedAt: new Date()
-        })
+        updatedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            userId: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
 
-    if (updated.count === 0) {
-      throw new Error('Participant not found or not active in meeting');
+    return updated;
+  }
+
+  static async cleanupDuplicateParticipants(meetingId) {
+    const participants = await prisma.meetingParticipant.findMany({
+      where: { meetingId },
+      orderBy: {
+        joinedAt: 'asc', // Keep oldest entries
+      },
+    });
+
+    const userParticipantMap = new Map();
+    const duplicatesToDelete = [];
+
+    participants.forEach(participant => {
+      if (userParticipantMap.has(participant.userId)) {
+        // This is a duplicate, mark for deletion
+        duplicatesToDelete.push(participant.participantId);
+      } else {
+        // First occurrence, keep it
+        userParticipantMap.set(participant.userId, participant);
+      }
+    });
+
+    if (duplicatesToDelete.length > 0) {
+      await prisma.meetingParticipant.deleteMany({
+        where: {
+          participantId: { in: duplicatesToDelete },
+        },
+      });
     }
 
-    return this.getParticipantStatus(userId, meetingId);
+    return {
+      duplicatesRemoved: duplicatesToDelete.length,
+      uniqueParticipants: userParticipantMap.size,
+    };
   }
 
   // Get specific participant status
