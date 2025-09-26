@@ -107,6 +107,7 @@ export class MeetingService {
 
     // Also return meeting statistics
     if (meeting) {
+      meeting.id = meeting.meetingId; // For frontend compatibility
       meeting.stats = {
         activeParticipants: meeting.participants.length,
         isOwnerPresent: meeting.participants.some(
@@ -241,6 +242,25 @@ static async joinMeeting(userId, meetingCode) {
 
   static async leaveMeeting(userId, meetingId) {
     return await prisma.$transaction(async (tx) => {
+
+      // Add validation first
+      if (!meetingId) { 
+        throw new Error("Meeting ID and User ID are require!");        
+      }
+
+      const meeting = await tx.meeting.findUnique({
+        where: { meetingId }, 
+        select: { meetingId: true, endedAt: true }
+      });
+
+      if (!meeting) {
+        throw new Error("Meeting not found!");
+      }
+
+      if (meeting.endedAt) {
+        throw new Error("Meeting already ended!");
+      }      
+
       // Update participant to mark as left
       const result = await tx.meetingParticipant.updateMany({
         where: {
