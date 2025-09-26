@@ -528,17 +528,17 @@ const Meeting = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex space-x-2">
-                    <Button size="small" className="flex-1">
+                  <div className="mt-4 flex flex-col grid grid-cols-2 gap-2">
+                    <Button size="small">
                       ✏️ Pen
                     </Button>
-                    <Button size="small" className="flex-1">
+                    <Button size="small">
                       🖍️ Marker
                     </Button>
-                    <Button size="small" className="flex-1">
+                    <Button size="small">
                       🧽 Eraser
                     </Button>
-                    <Button size="small" className="flex-1">
+                    <Button size="small">
                       🗑️ Clear
                     </Button>
                   </div>
