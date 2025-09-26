@@ -1,41 +1,58 @@
-import { useState } from "react";
+import {
+  UserGroupIcon as UserGroupSolidIcon,
+  PaintBrushIcon as PaintBrushSolidIcon,
+  ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftSolidIcon,
+} from "@heroicons/react/24/solid";
 import SidebarParticipants from "./SidebarParticipants";
 import SidebarChat from "./SidebarChat";
 import SidebarArtboard from "./SidebarArtboard";
-import { UserGroupIcon, ChatBubbleLeftRightIcon, PencilIcon } from "@heroicons/react/24/outline";
 
-const Sidebar = ({ participants, messages }) => {
-  const [activeTab, setActiveTab] = useState("participants");
+const Sidebar = ({ activeSidebar, toggleSidebar, participants }) => {
+  if (!activeSidebar) return null;
 
   return (
-    <div className="w-80 h-full bg-white border-l flex flex-col">
-      {/* Tabs */}
+    <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+      {/* Sidebar Header */}
       <div className="flex border-b">
         <button
-          onClick={() => setActiveTab("participants")}
-          className={`flex-1 p-2 ${activeTab === "participants" ? "bg-gray-100" : ""}`}
+          onClick={() => toggleSidebar("participants")}
+          className={`flex-1 px-4 py-3 text-sm font-medium flex flex-col items-center justify-center ${
+            activeSidebar === "participants"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+          }`}
         >
-          <UserGroupIcon className="w-6 h-6 mx-auto" />
+          <UserGroupSolidIcon className="w-5 h-5" /> Participants ({participants.length})
         </button>
         <button
-          onClick={() => setActiveTab("chat")}
-          className={`flex-1 p-2 ${activeTab === "chat" ? "bg-gray-100" : ""}`}
+          onClick={() => toggleSidebar("chat")}
+          className={`flex-1 px-4 py-3 text-sm font-medium flex flex-col items-center justify-center ${
+            activeSidebar === "chat"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+          }`}
         >
-          <ChatBubbleLeftRightIcon className="w-6 h-6 mx-auto" />
+          <ChatBubbleOvalLeftSolidIcon className="w-5 h-5" /> <span>Chat</span>
         </button>
         <button
-          onClick={() => setActiveTab("artboard")}
-          className={`flex-1 p-2 ${activeTab === "artboard" ? "bg-gray-100" : ""}`}
+          onClick={() => toggleSidebar("artboard")}
+          className={`flex-1 px-4 py-3 text-sm font-medium flex flex-col items-center justify-center ${
+            activeSidebar === "artboard"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+          }`}
         >
-          <PencilIcon className="w-6 h-6 mx-auto" />
+          <PaintBrushSolidIcon className="w-5 h-5" /> Artboard
         </button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "participants" && <SidebarParticipants participants={participants} />}
-        {activeTab === "chat" && <SidebarChat messages={messages} />}
-        {activeTab === "artboard" && <SidebarArtboard />}
+      {/* Sidebar Content */}
+      <div className="flex-1 p-4">
+        {activeSidebar === "participants" && (
+          <SidebarParticipants participants={participants} />
+        )}
+        {activeSidebar === "chat" && <SidebarChat />}
+        {activeSidebar === "artboard" && <SidebarArtboard />}
       </div>
     </div>
   );
