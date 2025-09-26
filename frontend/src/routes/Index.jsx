@@ -4,7 +4,7 @@ import LandingPage from "@/pages/LandingPage";
 import useAuthStore from "@/stores/AuthStore";
 import Exit from "@/components/layout/private/exit/Exit";
 // import Preview from "@/components/layout/private/Preview";
-import Meeting from "@/components/layout/private/meeting";
+import Meeting from "@/components/layout/private/meeting/meeting";
 // import Dashboard from "@/components/layout/private/Dashboard";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import OAuthCallback from "@/components/layout/public/auth/OAuthCallback";
