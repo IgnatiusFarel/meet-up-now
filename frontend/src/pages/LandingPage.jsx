@@ -34,26 +34,24 @@ const LandingPage = () => {
 
   return (
     <>
-      <head>
-        <title>Meet Up Now</title>
-        <meta
-          name="description"
-          content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
-        />
-        <link rel="icon" href="/MeetUpNow.png" />
+      <title>Meet Up Now</title>
+      <meta
+        name="description"
+        content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
+      />
+      <link rel="icon" href="/MeetUpNow.png" />
 
-        <meta
-          property="og:title"
-          content="Meet Up Now | Connect and Join Meetings Effortlessly"
-        />
-        <meta
-          property="og:description"
-          content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
-        />
-        <meta property="og:image" content="/MeetUpNow.png" />
-        <meta property="og:type" content="website" />
-      </head>
-      
+      <meta
+        property="og:title"
+        content="Meet Up Now | Connect and Join Meetings Effortlessly"
+      />
+      <meta
+        property="og:description"
+        content="Meet Up Now is the easiest way to connect, join, and manage your online meetings. Stay productive and collaborate seamlessly."
+      />
+      <meta property="og:image" content="/MeetUpNow.png" />
+      <meta property="og:type" content="website" />
+
       <Navbar />
       <main>
         <section id="home">
