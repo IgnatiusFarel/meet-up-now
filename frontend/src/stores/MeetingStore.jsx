@@ -1,12 +1,9 @@
+// stores/MeetingStore.jsx
 import Api from "@/Services/Api";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 
-/**
- * Enhanced Meeting Store with comprehensive participant management
- * Covers all endpoints from the routes you provided
- */
 const useMeetingStore = create(
   devtools(
     subscribeWithSelector(
@@ -15,95 +12,85 @@ const useMeetingStore = create(
         meetings: [],
         currentMeeting: null,
         activeMeetings: [],
-        participants: [], // Added participants state
-        currentUserStatus: null, // Added current user status state
-        isLoading: false,
+        participants: [],
+        currentUserStatus: null,
+
+        // Loading states
+        isCreatingMeeting: false,
+        isJoiningMeeting: false,
+        isFetchingMeeting: false,
+        isLeavingMeeting: false,
+        isEndingMeeting: false,
+        isFetchingActiveMeetings: false,
+        isCheckingJoin: false,
+
         error: null,
         joinCheckResult: null,
-        stream: null, 
+        stream: null,
 
-        // ============ ACTIONS ============
+        // ============ BASIC ACTIONS ============
+        setIsCreatingMeeting: (value) => {
+          set((s) => {
+            s.isCreatingMeeting = value;
+          });
+        },
+        setIsJoiningMeeting: (value) => {
+          set((s) => {
+            s.isJoiningMeeting = value;
+          });
+        },
 
-         /**
-         * Set local media stream
-         */
         setLocalStream: (stream) => {
           set((s) => {
             s.stream = stream;
           });
         },
 
-        /**
-         * Alias untuk setLocalStream (biar ga error di komponen lama)
-         */
         setStream: (stream) => {
           get().setLocalStream(stream);
         },
 
-        /**
-         * Set current user status (mic, camera, screen share)
-         */
         setCurrentUserStatus: (status) => {
           set((s) => {
-            s.currentUserStatus = {
-              ...s.currentUserStatus,
-              ...status
-            };
+            s.currentUserStatus = { ...s.currentUserStatus, ...status };
           });
-          console.log("Current user status updated:", status);
         },
 
-        /**
-         * Get current user status
-         */
-        getCurrentUserStatus: () => {
-          return get().currentUserStatus;
-        },
+        getCurrentUserStatus: () => get().currentUserStatus,
 
-        /**
-         * Add or update participant
-         */
         updateParticipant: (participantData) => {
           set((s) => {
-            const existingIndex = s.participants.findIndex(
-              p => p.id === participantData.id
+            const idx = s.participants.findIndex(
+              (p) => p.id === participantData.id
             );
-            
-            if (existingIndex >= 0) {
-              s.participants[existingIndex] = {
-                ...s.participants[existingIndex],
-                ...participantData
+            if (idx >= 0)
+              s.participants[idx] = {
+                ...s.participants[idx],
+                ...participantData,
               };
-            } else {
-              s.participants.push(participantData);
-            }
+            else s.participants.push(participantData);
           });
         },
 
-        /**
-         * Remove participant
-         */
         removeParticipant: (participantId) => {
           set((s) => {
-            s.participants = s.participants.filter(p => p.id !== participantId);
+            s.participants = s.participants.filter(
+              (p) => p.id !== participantId
+            );
           });
         },
 
-        /**
-         * Clear all participants
-         */
         clearParticipants: () => {
           set((s) => {
             s.participants = [];
           });
         },
 
-        /**
-         * Create a new meeting
-         */
+        // ============ API ACTIONS ============
+
         createMeeting: async (title) => {
           set((s) => {
-            s.isLoading = true;
+            s.isCreatingMeeting = true;
             s.error = null;
           });
           try {
@@ -113,25 +100,22 @@ const useMeetingStore = create(
               set((s) => {
                 s.meetings.unshift(newMeeting);
                 s.currentMeeting = newMeeting;
-                s.isLoading = false;
+                s.isCreatingMeeting = false;
               });
               return newMeeting;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isCreatingMeeting = false;
               s.error = "Failed to create meeting";
             });
             throw e;
           }
         },
 
-        /**
-         * Get meeting by code
-         */
         getMeetingByCode: async (code) => {
           set((s) => {
-            s.isLoading = true;
+            s.isFetchingMeeting = true;
             s.error = null;
           });
           try {
@@ -140,25 +124,22 @@ const useMeetingStore = create(
               const meeting = res.data.data;
               set((s) => {
                 s.currentMeeting = meeting;
-                s.isLoading = false;
+                s.isFetchingMeeting = false;
               });
               return meeting;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isFetchingMeeting = false;
               s.error = "Meeting not found!";
             });
             throw e;
           }
         },
 
-        /**
-         * Join a meeting by code
-         */
         joinMeeting: async (code) => {
           set((s) => {
-            s.isLoading = true;
+            s.isJoiningMeeting = true;
             s.error = null;
           });
           try {
@@ -166,47 +147,46 @@ const useMeetingStore = create(
             if (res.data?.success) {
               await get().getMeetingByCode(code);
               set((s) => {
-                s.isLoading = false;
+                s.isJoiningMeeting = false;
               });
               return res.data.data;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isJoiningMeeting = false;
               s.error = "Failed to join meeting!";
             });
             throw e;
           }
         },
 
-        /**
-         * Leave a meeting
-         */
         leaveMeeting: async (meetingId) => {
+          set((s) => {
+            s.isLeavingMeeting = true;
+            s.error = null;
+          });
           try {
             await Api.post(`/meetings/${meetingId}/leave`);
-            // Clear meeting-related state when leaving
             set((s) => {
               s.currentMeeting = null;
               s.participants = [];
               s.currentUserStatus = null;
+              s.isLeavingMeeting = false;
             });
           } catch (e) {
-            console.warn("leaveMeeting failed, clearing state anyway!");
             set((s) => {
               s.currentMeeting = null;
               s.participants = [];
               s.currentUserStatus = null;
+              s.isLeavingMeeting = false;
             });
+            throw e;
           }
         },
 
-        /**
-         * End a meeting (owner only)
-         */
         endMeeting: async (meetingId) => {
           set((s) => {
-            s.isLoading = true;
+            s.isEndingMeeting = true;
             s.error = null;
           });
           try {
@@ -216,40 +196,36 @@ const useMeetingStore = create(
                 s.currentMeeting = null;
                 s.participants = [];
                 s.currentUserStatus = null;
-                s.isLoading = false;
+                s.isEndingMeeting = false;
               });
               return res.data.data;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isEndingMeeting = false;
               s.error = "Failed to end meeting";
             });
             throw e;
           }
         },
 
-        /**
-         * Get active meetings for current user
-         */
         getActiveMeetings: async () => {
           set((s) => {
-            s.isLoading = true;
+            s.isFetchingActiveMeetings = true;
             s.error = null;
           });
           try {
             const res = await Api.get("/meetings/active");
-
             if (res.data?.success) {
               set((s) => {
                 s.activeMeetings = res.data.data;
-                s.isLoading = false;
+                s.isFetchingActiveMeetings = false;
               });
               return res.data.data;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isFetchingActiveMeetings = false;
               s.error = "Failed to fetch active meetings";
             });
             throw e;
@@ -258,7 +234,7 @@ const useMeetingStore = create(
 
         checkCanJoin: async (code) => {
           set((s) => {
-            s.isLoading = true;
+            s.isCheckingJoin = true;
             s.error = null;
             s.joinCheckResult = null;
           });
@@ -267,22 +243,19 @@ const useMeetingStore = create(
             if (res.data?.success) {
               set((s) => {
                 s.joinCheckResult = res.data.data;
-                s.isLoading = false;
+                s.isCheckingJoin = false;
               });
               return res.data.data;
             }
           } catch (e) {
             set((s) => {
-              s.isLoading = false;
+              s.isCheckingJoin = false;
               s.error = "Cannot join";
             });
             throw e;
           }
         },
 
-        /**
-         * Clear all meeting data (useful for logout)
-         */
         clearMeetingData: () => {
           set((s) => {
             s.meetings = [];
@@ -290,7 +263,13 @@ const useMeetingStore = create(
             s.activeMeetings = [];
             s.participants = [];
             s.currentUserStatus = null;
-            s.isLoading = false;
+            s.isCreatingMeeting = false;
+            s.isJoiningMeeting = false;
+            s.isFetchingMeeting = false;
+            s.isLeavingMeeting = false;
+            s.isEndingMeeting = false;
+            s.isFetchingActiveMeetings = false;
+            s.isCheckingJoin = false;
             s.error = null;
             s.joinCheckResult = null;
             s.stream = null;
