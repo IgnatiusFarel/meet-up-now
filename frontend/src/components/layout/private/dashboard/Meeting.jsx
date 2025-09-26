@@ -10,14 +10,18 @@ const Meeting = () => {
   const navigate = useNavigate();
   const { message, modal } = App.useApp();
   const [meetCode, setMeetCode] = useState("");
-  const [loading, setLoading] = useState(false);
   const [checkingMeeting, setCheckingMeeting] = useState(false);
 
+  // ambil state & actions dari store
   const checkCanJoin = useMeetingStore((s) => s.checkCanJoin);
   const createMeeting = useMeetingStore((s) => s.createMeeting);
+  const isCreatingMeeting = useMeetingStore((s) => s.isCreatingMeeting);
+  const isJoiningMeeting = useMeetingStore((s) => s.isJoiningMeeting);
+  const setIsCreatingMeeting = useMeetingStore((s) => s.setIsCreatingMeeting);
+  const setIsJoiningMeeting = useMeetingStore((s) => s.setIsJoiningMeeting);
 
   const handleNewMeeting = async () => {
-    setLoading(true);
+    setIsCreatingMeeting(true);
     try {
       const title = await new Promise((resolve) => {
         let inputValue = `Meeting - ${dayjs().format("MM DD, HH:mm")}`;
@@ -44,29 +48,20 @@ const Meeting = () => {
       });
 
       if (!title) {
-        setLoading(false);
+        setIsCreatingMeeting(false);
         return;
       }
 
       const result = await createMeeting(title);
-      console.log("Create meeting result:", result); // Debug log
 
-      // MeetingStore sudah mengembalikan data meeting langsung (tanpa wrapper success/data)
       if (result && result.meetingCode) {
         const meeting = result;
         const meetingCode = meeting.meetingCode;
-
-        if (!meetingCode) {
-          console.error("Meeting code not found in response:", result);
-          throw new Error("Meeting created but code not returned from server");
-        }
 
         const successMessage = "Meeting created successfully!";
         message.success(successMessage);
 
         Modal.destroyAll();
-
-        console.log("Navigating to preview with code:", meetingCode);
 
         setTimeout(() => {
           navigate(`/preview/${meetingCode}`, { replace: true });
@@ -78,7 +73,7 @@ const Meeting = () => {
       console.error("Failed to create meeting:", error);
 
       let errorMessage =
-        "💥 Oops! Something went wrong while creating the meeting. Please try again in a moment!";
+        "💥 Oops! Something went wrong while creating the meeting. Please try again!";
 
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -90,7 +85,7 @@ const Meeting = () => {
       message.error(errorMessage);
       Modal.destroyAll();
     } finally {
-      setLoading(false);
+      setIsCreatingMeeting(false);
     }
   };
 
@@ -107,36 +102,20 @@ const Meeting = () => {
     }
 
     setCheckingMeeting(true);
-    setLoading(true);
-
+    setIsJoiningMeeting(true);
     try {
-      console.log("Checking if can join meeting:", meetCode);
-
       const result = await checkCanJoin(meetCode.toUpperCase());
 
-      console.log("Full checkCanJoin result:", result);
-
-      // Handle different possible response structures
       let canJoin, meeting, isAlreadyParticipant;
 
       if (result && result.data) {
-        // Standard structure: { success: true, data: { canJoin, meeting, isAlreadyParticipant }, message }
         ({ canJoin, meeting, isAlreadyParticipant } = result.data);
       } else if (result && typeof result === "object") {
-        // Direct structure: { canJoin, meeting, isAlreadyParticipant, success, message }
         canJoin = result.canJoin;
         meeting = result.meeting;
         isAlreadyParticipant = result.isAlreadyParticipant;
       } else {
-        // Fallback if structure is unexpected
-        console.warn("Unexpected result structure:", result);
         throw new Error("Invalid response format from server");
-      }
-
-      // Check if we have the required data
-      if (canJoin === undefined) {
-        console.error("canJoin property missing from response:", result);
-        throw new Error("Server response missing required data");
       }
 
       if (!canJoin) {
@@ -145,30 +124,15 @@ const Meeting = () => {
         return;
       }
 
-      // Success case
       let successMessage = "Connecting you to the meeting...";
-
       if (isAlreadyParticipant) {
         successMessage = "🔄 Reconnecting you back to the meeting...";
       } else if (meeting?.status === "waiting") {
-        successMessage = "⏳ Waiting for the host... hang tight!";
-      } else if (meeting?.status === "active_no_host") {
-        successMessage = "👀 Meeting is open, but host isn't here yet...";
+        successMessage = "⏳ Waiting for the host...";
       }
 
       message.success(successMessage);
 
-      console.log("Meeting info:", {
-        code: meeting?.meetingCode,
-        title: meeting?.title,
-        participantCount: meeting?.participantCount,
-        duration: meeting?.duration,
-        status: meeting?.status,
-        isOwner: meeting?.isOwner,
-        isAlreadyParticipant,
-      });
-
-      // Navigate to meeting
       const meetingCode = meeting?.meetingCode || meetCode;
       navigate(`/preview/${meetingCode}`);
     } catch (error) {
@@ -180,31 +144,12 @@ const Meeting = () => {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
-      } else if (error.response?.status) {
-        switch (error.response.status) {
-          case 404:
-            errorMessage = "Meeting not found! Please check the room code.";
-            break;
-          case 410:
-            errorMessage = "This meeting has ended or expired.";
-            break;
-          case 400:
-            errorMessage = "Invalid meeting code format.";
-            break;
-          case 500:
-            errorMessage = "Server error. Please try again later!";
-            break;
-          case 503:
-            errorMessage = "Service unavailable. Please try again later!";
-            break;
-          default:
-            errorMessage = "Network error. Please check your connection!";
-        }
       }
+
       message.destroy();
       message.error(errorMessage);
     } finally {
-      setLoading(false);
+      setIsJoiningMeeting(false);
       setCheckingMeeting(false);
     }
   };
@@ -230,7 +175,7 @@ const Meeting = () => {
             size="large"
             className="flex items-center gap-2 h-12"
             onClick={handleNewMeeting}
-            loading={loading}
+            loading={isCreatingMeeting}
             disabled={checkingMeeting}
           >
             <PlusCircleIcon className="mr-2 w-4 h-4" /> New Meeting
@@ -245,8 +190,10 @@ const Meeting = () => {
               value={meetCode}
               maxLength={6}
               onChange={handleMeetCodeInput}
-              onPressEnter={() => meetCode.length === 6 && handleJoinMeeting()}
-              disabled={loading}
+              onPressEnter={() =>
+                meetCode.length === 6 && handleJoinMeeting()
+              }
+              disabled={isCreatingMeeting || isJoiningMeeting}
             />
             <Button
               type="text"
@@ -256,7 +203,12 @@ const Meeting = () => {
                   : "hover:bg-gray-100 hover:text-gray-500"
               }`}
               onClick={handleJoinMeeting}
-              disabled={meetCode.length !== 6}
+              disabled={
+                meetCode.length !== 6 ||
+                isJoiningMeeting ||
+                isCreatingMeeting
+              }
+              loading={isJoiningMeeting}
             >
               Join
             </Button>
