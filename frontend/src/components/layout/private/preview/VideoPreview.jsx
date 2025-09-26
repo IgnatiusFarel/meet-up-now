@@ -27,11 +27,16 @@ const VideoPreview = ({
 
   // Function to render different permission states
   const renderPermissionState = () => {
+    // Loading state → pakai Spin fullscreen
     if (loading) {
       return (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-          <Spin tip="Loading..." size="large" className="custom-spin" />
-        </div>
+        <Spin
+          spinning={true}
+          fullscreen
+          tip="Loading..."
+          size="large"
+          className="custom-spin"
+        />
       );
     }
 
@@ -82,19 +87,32 @@ const VideoPreview = ({
               </div>
             )}
 
-            <button
-              onClick={retry}
-              className={`${
-                isPermissionDenied
-                  ? "bg-orange-500 hover:bg-orange-400"
-                  : "bg-white hover:bg-gray-100 text-red-900"
-              } text-black px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 mx-auto font-medium`}
-            >
-              <ArrowPathIcon className="w-5 h-5" />
-              <span>
-                {isPermissionDenied ? "Check Permission" : "Try Again"}
-              </span>
-            </button>
+        <button
+  onClick={() => {
+    // coba request permission ulang
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        // izin diberikan
+        retry(); // jalankan retry untuk set state
+      })
+      .catch(err => {
+        // masih denied
+        console.error(err);
+        retry(); // state error masih denied
+      });
+  }}
+  className={`${
+    isPermissionDenied
+      ? "bg-orange-500 hover:bg-orange-400"
+      : "bg-white hover:bg-gray-100 text-red-900"
+  } text-black px-6 py-3 rounded-lg transition-colors flex items-center space-x-2 mx-auto font-medium`}
+>
+  <ArrowPathIcon className="w-5 h-5" />
+  <span>
+    {isPermissionDenied ? "Check Permission" : "Try Again"}
+  </span>
+</button>
+
           </div>
         </div>
       );
