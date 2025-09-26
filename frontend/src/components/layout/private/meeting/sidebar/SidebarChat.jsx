@@ -1,35 +1,25 @@
-import { useState } from "react";
+import { Button } from "antd";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
-const SidebarChat = ({ messages }) => {
-  const [newMsg, setNewMsg] = useState("");
-
-  const handleSend = () => {
-    if (newMsg.trim() !== "") {
-      console.log("Send:", newMsg);
-      setNewMsg("");
-    }
-  };
-
+const SidebarChat = () => {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
-        {messages.map((msg, i) => (
-          <div key={i} className="p-2 bg-gray-100 rounded">
-            <strong>{msg.sender}:</strong> {msg.text}
-          </div>
-        ))}
+      <div className="flex-1 mb-4">
+        <p className="text-gray-500 text-sm text-center py-8">
+          No messages yet
+        </p>
       </div>
-      <div className="flex border-t">
-        <input
-          type="text"
-          className="flex-1 p-2 outline-none"
-          value={newMsg}
-          onChange={(e) => setNewMsg(e.target.value)}
-          placeholder="Type a message..."
-        />
-        <button onClick={handleSend} className="px-4 bg-blue-500 text-white">
-          Send
-        </button>
+      <div className="border-t pt-4">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <Button type="primary" className="px-4">
+            <PaperAirplaneIcon className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
