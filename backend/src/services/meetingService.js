@@ -122,6 +122,184 @@ export class MeetingService {
     return meeting;
   }
 
+  /**
+   * Get meeting by meetingId with authorization check
+   * Method ini dibutuhkan untuk fallback strategy frontend
+   */
+  static async getByMeetingId(meetingId, requesterId) {
+    try {
+      console.log(`Service: Getting meeting by ID: ${meetingId} for user: ${requesterId}`);
+      
+      const meeting = await prisma.meeting.findUnique({
+        where: { meetingId },
+        include: {
+          owner: {
+            select: {
+              userId: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          participants: {
+            where: { leftAt: null }, // Only active participants
+            include: {
+              user: {
+                select: {
+                  userId: true,
+                  name: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+            orderBy: {
+              joinedAt: 'desc',
+            },
+          },
+        },
+      });
+
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      if (meeting.endedAt) {
+        throw new Error('Meeting has ended');
+      }
+
+      // Check if requester is owner or participant
+      const isOwner = meeting.ownerId === requesterId;
+      const isParticipant = meeting.participants.some(p => p.userId === requesterId);
+
+      // Remove duplicates from participants (jika ada)
+      const uniqueParticipants = [];
+      const seenUserIds = new Set();
+
+      for (const participant of meeting.participants) {
+        if (!seenUserIds.has(participant.userId)) {
+          uniqueParticipants.push(participant);
+          seenUserIds.add(participant.userId);
+        }
+      }
+
+      // Return full meeting data for authorized users, basic info for others
+      const meetingData = {
+        meetingId: meeting.meetingId,
+        meetingCode: meeting.meetingCode,
+        title: meeting.title,
+        createdAt: meeting.createdAt,
+        participantCount: uniqueParticipants.length,
+        owner: meeting.owner,
+      };
+
+      if (isOwner || isParticipant) {
+        return {
+          ...meetingData,
+          description: meeting.description,
+          endedAt: meeting.endedAt,
+          participants: uniqueParticipants,
+          canView: true,
+        };
+      } else {
+        return {
+          ...meetingData,
+          canView: false,
+        };
+      }
+
+    } catch (error) {
+      console.error('MeetingService.getByMeetingId error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get active users for a meeting (alternative method untuk fallback)
+   */
+  static async getActiveUsers(meetingId, requesterId) {
+    try {
+      console.log(`Service: Getting active users for meeting: ${meetingId}`);
+      
+      const meeting = await prisma.meeting.findUnique({
+        where: { meetingId },
+        select: { 
+          meetingId: true, 
+          ownerId: true,
+          endedAt: true 
+        },
+      });
+
+      if (!meeting) {
+        throw new Error('Meeting not found');
+      }
+
+      if (meeting.endedAt) {
+        throw new Error('Meeting has ended');
+      }
+
+      // Check if requester is participant or owner
+      const requesterIsParticipant = await prisma.meetingParticipant.findFirst({
+        where: {
+          meetingId,
+          userId: requesterId,
+          leftAt: null,
+        },
+      });
+
+      if (!requesterIsParticipant && meeting.ownerId !== requesterId) {
+        throw new Error('Not authorized');
+      }
+
+      // Get active participants
+      const activeUsers = await prisma.meetingParticipant.findMany({
+        where: {
+          meetingId,
+          leftAt: null,
+        },
+        include: {
+          user: {
+            select: {
+              userId: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+        },
+        orderBy: {
+          joinedAt: 'desc',
+        },
+      });
+
+      // Remove duplicates dan format data
+      const uniqueUsers = [];
+      const seenUserIds = new Set();
+
+      for (const userRecord of activeUsers) {
+        if (!seenUserIds.has(userRecord.userId)) {
+          uniqueUsers.push({
+            userId: userRecord.user.userId,
+            name: userRecord.user.name,
+            email: userRecord.user.email,
+            avatarUrl: userRecord.user.avatarUrl,
+            joinedAt: userRecord.joinedAt,
+            isMicOn: userRecord.isMicOn,
+            isCameraOn: userRecord.isCameraOn,
+            isScreenShare: userRecord.isScreenShare,
+          });
+          seenUserIds.add(userRecord.userId);
+        }
+      }
+
+      return uniqueUsers;
+
+    } catch (error) {
+      console.error('MeetingService.getActiveUsers error:', error);
+      throw error;
+    }
+  }
+
 static async joinMeeting(userId, meetingCode) {
   // Use transaction for data consistency
   return await prisma.$transaction(async (tx) => {
