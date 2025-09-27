@@ -7,7 +7,8 @@ import authRoutes from '#routes/authRoutes';
 import chatRoutes from '#routes/chatRoutes';
 import { ApiResponse } from '#utils/response';
 import meetingRoutes from '#routes/meetingRoutes';
-import participantRoutes from '#routes/participantRoutes';
+// HAPUS import participantRoutes karena sudah di-handle di meetingRoutes
+// import participantRoutes from '#routes/participantRoutes';
 import { getWsService, initWsService } from '#services/websocketInstance';
 import { attacWsService } from '#middleware/ws';
 
@@ -47,8 +48,13 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+
+// HANYA gunakan meetingRoutes - participant routes akan di-handle di dalam meetingRoutes
 app.use('/api/meetings', meetingRoutes);
-app.use('/api/meetings/:meetingId/participants', participantRoutes);
+
+// HAPUS baris ini - ini yang menyebabkan konflik!
+// app.use('/api/meetings/:meetingId/participants', participantRoutes);
+
 app.use('/api/chat', chatRoutes);
 
 // WebSocket status endpoint
