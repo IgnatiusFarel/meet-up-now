@@ -1,4 +1,3 @@
-// VideoArea.jsx
 import ParticipantCard from "./ParticipantCard";
 
 const VideoArea = ({
