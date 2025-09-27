@@ -1,14 +1,12 @@
-// src/Services/Socket.jsx
 import { io } from "socket.io-client";
 import useAuthStore from "@/stores/AuthStore";
 
 const WS_URL = import.meta.env.VITE_APP_WS_URL || "http://localhost:3000";
 
-// Ambil token user
 const { token } = useAuthStore.getState();
 
 const socket = io(WS_URL, {
-  auth: { token }, // dikirim ke middleware backend
+  auth: { token }, 
   transports: ["websocket"],
   withCredentials: true
 });
