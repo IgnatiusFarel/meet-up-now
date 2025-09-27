@@ -11,13 +11,99 @@ const useParticipantStore = create(
         participants: [],
         participantHistory: [],
         meetingStats: null,
+        previewData: null, // Untuk preview sebelum join
         currentUserStatus: {
           isMicOn: true,
           isCameraOn: true,
           isScreenShare: false,
         },
         isLoadingParticipants: false,
+        isLoadingPreview: false,
         participantError: null,
+        previewError: null,
+        
+        // Connection state untuk real-time updates
+        connectionStatus: {
+          isConnected: false,
+          reconnectAttempts: 0,
+          lastUpdateAt: null,
+        },
+
+        // ============ PREVIEW ACTIONS ============
+
+        /**
+         * Get meeting preview data (for join confirmation)
+         */
+        getMeetingPreview: async (meetingCode) => {
+          if (!meetingCode) {
+            console.warn("getMeetingPreview: meetingCode is required");
+            return null;
+          }
+
+          set((s) => {
+            s.isLoadingPreview = true;
+            s.previewError = null;
+          });
+
+          try {
+            console.log(`🔍 Getting meeting preview for: ${meetingCode}`);
+            
+            const res = await Api.get(`/meetings/code/${meetingCode}/can-join`);
+            console.log("📡 Preview API response:", res.data);
+
+            if (res.data?.success) {
+              const previewData = {
+                ...res.data.data,
+                fetchedAt: new Date().toISOString(),
+                participantCount: res.data.data.meeting?.participantCount || 0,
+                isOwner: res.data.data.meeting?.isOwner || false,
+                status: res.data.data.meeting?.status || 'waiting',
+              };
+
+              set((s) => {
+                s.previewData = previewData;
+                s.isLoadingPreview = false;
+                s.previewError = null;
+              });
+
+              console.log("✅ Meeting preview loaded successfully");
+              return previewData;
+            } else {
+              throw new Error(res.data?.message || "Failed to get preview");
+            }
+          } catch (error) {
+            console.error("❌ getMeetingPreview error:", error);
+            
+            let errorMessage = "Failed to load meeting preview";
+            if (error.response?.status === 404) {
+              errorMessage = "Meeting not found";
+            } else if (error.response?.status === 410) {
+              errorMessage = "Meeting has ended or expired";
+            } else if (error.response?.data?.message) {
+              errorMessage = error.response.data.message;
+            }
+
+            set((s) => {
+              s.previewData = null;
+              s.isLoadingPreview = false;
+              s.previewError = errorMessage;
+            });
+
+            return null;
+          }
+        },
+
+        /**
+         * Clear preview data
+         */
+        clearPreview: () => {
+          set((s) => {
+            s.previewData = null;
+            s.previewError = null;
+            s.isLoadingPreview = false;
+          });
+          console.log("🧹 Preview data cleared");
+        },
 
         // ============ IMPROVED ACTIONS ============
 
@@ -61,14 +147,18 @@ const useParticipantStore = create(
               console.log("🔄 Attempting fallback: fetch meeting details");
               
               try {
-                const meetingRes = await Api.get(`/meetings/${meetingId}`);
+                const meetingRes = await Api.get(`/meetings/details/${meetingId}`);
                 console.log("📡 Meeting details response:", meetingRes.data);
                 
                 if (meetingRes.data?.success && meetingRes.data.data) {
                   const meeting = meetingRes.data.data;
                   
-                  // Create participants list from meeting data
-                  if (meeting.owner) {
+                  // Extract participants from meeting data
+                  if (meeting.participants && meeting.participants.length > 0) {
+                    participantList = meeting.participants;
+                    console.log(`✅ Found ${participantList.length} participants from meeting details`);
+                  } else if (meeting.owner) {
+                    // Create participants list from meeting data
                     participantList.push({
                       user: meeting.owner,
                       joinedAt: meeting.createdAt,
@@ -81,58 +171,31 @@ const useParticipantStore = create(
                     console.log("👤 Added owner as participant");
                   }
                   
-                  // If meeting has participantCount > 1, try to get additional info
-                  if (meeting.participantCount > 1) {
-                    console.log(`📊 Meeting shows ${meeting.participantCount} participants, but only found owner`);
+                  // If meeting has participantCount > current list, try alternative endpoint
+                  if (meeting.participantCount > participantList.length) {
+                    console.log(`📊 Meeting shows ${meeting.participantCount} participants, trying active users endpoint`);
                     
-                    // Fallback Strategy 2: Try alternative participants endpoint
                     try {
                       const activeRes = await Api.get(`/meetings/${meetingId}/active-users`);
                       if (activeRes.data?.success && activeRes.data.data) {
                         console.log("📡 Active users response:", activeRes.data.data);
                         
-                        activeRes.data.data.forEach(activeUser => {
-                          if (!participantList.find(p => p.user?.userId === activeUser.userId)) {
-                            participantList.push({
-                              user: activeUser,
-                              joinedAt: activeUser.joinedAt || new Date().toISOString(),
-                              isMicOn: activeUser.isMicOn ?? true,
-                              isCameraOn: activeUser.isCameraOn ?? true,
-                              isOwner: false,
-                              status: 'active',
-                              role: 'participant'
-                            });
-                          }
-                        });
+                        // Replace or merge with active users data
+                        const activeUsers = activeRes.data.data.map(activeUser => ({
+                          user: activeUser,
+                          joinedAt: activeUser.joinedAt || new Date().toISOString(),
+                          isMicOn: activeUser.isMicOn ?? true,
+                          isCameraOn: activeUser.isCameraOn ?? true,
+                          isOwner: activeUser.userId === meeting.ownerId,
+                          status: 'active',
+                          role: activeUser.userId === meeting.ownerId ? 'owner' : 'participant'
+                        }));
+                        
+                        participantList = activeUsers.length > 0 ? activeUsers : participantList;
+                        console.log(`✅ Using active users data: ${participantList.length} participants`);
                       }
                     } catch (activeUsersError) {
                       console.log("⚠️ Active users endpoint also failed:", activeUsersError.message);
-                    }
-                    
-                    // Fallback Strategy 3: If we still only have owner but meeting shows more participants,
-                    // create placeholder participants based on count
-                    if (participantList.length === 1 && meeting.participantCount > 1) {
-                      const additionalCount = meeting.participantCount - 1;
-                      console.log(`🔄 Creating ${additionalCount} placeholder participants`);
-                      
-                      for (let i = 0; i < additionalCount; i++) {
-                        participantList.push({
-                          user: {
-                            userId: `placeholder-${i + 1}`,
-                            name: `Participant ${i + 1}`,
-                            email: `participant${i + 1}@meeting.local`,
-                            avatarUrl: null
-                          },
-                          joinedAt: new Date().toISOString(),
-                          isMicOn: true,
-                          isCameraOn: true,
-                          isOwner: false,
-                          status: 'active',
-                          role: 'participant',
-                          isPlaceholder: true
-                        });
-                      }
-                      console.log(`📝 Added ${additionalCount} placeholder participants`);
                     }
                   }
                   
@@ -162,6 +225,7 @@ const useParticipantStore = create(
               s.participants = validParticipants;
               s.isLoadingParticipants = false;
               s.participantError = null;
+              s.connectionStatus.lastUpdateAt = new Date().toISOString();
             });
             
             return validParticipants;
@@ -203,7 +267,7 @@ const useParticipantStore = create(
             console.log(`🔍 Getting participants with meeting data for: ${meetingCode}`);
             
             // First, get meeting info to get meetingId
-            const joinCheckRes = await Api.get(`/meetings/can-join/${meetingCode}`);
+            const joinCheckRes = await Api.get(`/meetings/code/${meetingCode}/can-join`);
             
             if (joinCheckRes.data?.success && joinCheckRes.data.data?.meeting) {
               const meeting = joinCheckRes.data.data.meeting;
@@ -225,6 +289,71 @@ const useParticipantStore = create(
             return [];
           }
         },
+
+        // ============ REAL-TIME STATE MANAGEMENT ============
+
+        /**
+         * Handle real-time participant updates (for WebSocket/SSE)
+         */
+        handleParticipantUpdate: (update) => {
+          const { type, data } = update;
+          
+          set((s) => {
+            switch (type) {
+              case 'participant:joined':
+                const existingJoinIndex = s.participants.findIndex(
+                  (p) => p.user?.userId === data.participant?.user?.userId
+                );
+                if (existingJoinIndex === -1) {
+                  s.participants.push(data.participant);
+                  console.log(`🔔 Participant joined: ${data.participant.user.name}`);
+                } else {
+                  s.participants[existingJoinIndex] = { ...s.participants[existingJoinIndex], ...data.participant };
+                  console.log(`🔄 Participant updated: ${data.participant.user.name}`);
+                }
+                break;
+                
+              case 'participant:left':
+                s.participants = s.participants.filter(
+                  (p) => p.user?.userId !== data.userId
+                );
+                console.log(`🔔 Participant left: ${data.userId}`);
+                break;
+                
+              case 'participant:status_changed':
+                const statusIndex = s.participants.findIndex(
+                  (p) => p.user?.userId === data.userId
+                );
+                if (statusIndex !== -1) {
+                  Object.assign(s.participants[statusIndex], data.updates);
+                  console.log(`🔄 Participant status updated: ${data.userId}`, data.updates);
+                }
+                break;
+                
+              case 'meeting:ended':
+                s.participants = [];
+                console.log('🔔 Meeting ended, clearing participants');
+                break;
+                
+              default:
+                console.log(`🔔 Unknown update type: ${type}`);
+            }
+            
+            s.connectionStatus.lastUpdateAt = new Date().toISOString();
+          });
+        },
+
+        /**
+         * Set connection status for real-time updates
+         */
+        setConnectionStatus: (status) => {
+          set((s) => {
+            s.connectionStatus = { ...s.connectionStatus, ...status };
+          });
+          console.log("🌐 Connection status updated:", status);
+        },
+
+        // ============ EXISTING ACTIONS (Enhanced) ============
 
         /**
          * Update media status for current user
@@ -475,8 +604,16 @@ const useParticipantStore = create(
             s.participants = [];
             s.participantHistory = [];
             s.meetingStats = null;
+            s.previewData = null;
             s.isLoadingParticipants = false;
+            s.isLoadingPreview = false;
             s.participantError = null;
+            s.previewError = null;
+            s.connectionStatus = {
+              isConnected: false,
+              reconnectAttempts: 0,
+              lastUpdateAt: null,
+            };
           });
           console.log("🧹 All participant data cleared");
         },
@@ -528,6 +665,80 @@ const useParticipantStore = create(
         isUserInMeeting: (userId) => {
           const state = get();
           return state.participants.some(p => p.user?.userId === userId);
+        },
+
+        /**
+         * Get participants with specific status
+         */
+        getParticipantsByStatus: (status) => {
+          const state = get();
+          return state.participants.filter(p => p.status === status);
+        },
+
+        /**
+         * Get participants with mic on
+         */
+        getParticipantsWithMicOn: () => {
+          const state = get();
+          return state.participants.filter(p => p.isMicOn === true);
+        },
+
+        /**
+         * Get participants with camera on
+         */
+        getParticipantsWithCameraOn: () => {
+          const state = get();
+          return state.participants.filter(p => p.isCameraOn === true);
+        },
+
+        /**
+         * Get screen sharing participant
+         */
+        getScreenSharingParticipant: () => {
+          const state = get();
+          return state.participants.find(p => p.isScreenShare === true) || null;
+        },
+
+        /**
+         * Check if current user is meeting owner
+         */
+        isCurrentUserOwner: (currentUserId) => {
+          const state = get();
+          const currentParticipant = state.participants.find(p => p.user?.userId === currentUserId);
+          return currentParticipant?.isOwner === true;
+        },
+
+        // ============ PREVIEW UTILITY METHODS ============
+
+        /**
+         * Check if meeting is ready to join
+         */
+        isMeetingReadyToJoin: () => {
+          const state = get();
+          return state.previewData?.canJoin === true && !state.previewError;
+        },
+
+        /**
+         * Get meeting title from preview or participants
+         */
+        getMeetingTitle: () => {
+          const state = get();
+          return state.previewData?.meeting?.title || 'Meeting Room';
+        },
+
+        getParticipantsByCode: async (meetingCode) => {
+  return await get().getParticipantsWithMeetingData(meetingCode);
+},
+
+        /**
+         * Get meeting owner info
+         */
+        getMeetingOwner: () => {
+          const state = get();
+          if (state.previewData?.meeting?.owner) {
+            return state.previewData.meeting.owner;
+          }
+          return state.participants.find(p => p.isOwner)?.user || null;
         },
       }))
     ),
