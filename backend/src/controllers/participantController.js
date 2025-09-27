@@ -124,9 +124,9 @@ export class ParticipantController {
       const ownerId = req.user.userId;
 
       const result = await ParticipantService.kickParticipant(
+        ownerId,
         meetingId, 
         participantUserId, 
-        ownerId
       );
       
       return res.status(200).json(
@@ -173,9 +173,9 @@ export class ParticipantController {
       }
 
       const updatedParticipant = await ParticipantService.toggleParticipantMute(
+        ownerId, 
         meetingId, 
         participantUserId, 
-        ownerId, 
         mute
       );
       
