@@ -15,9 +15,10 @@ const Preview = () => {
   const { message } = App.useApp();
   const [debugInfo, setDebugInfo] = useState([]);
   const [joining, setJoining] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false); // Add initialization flag
-
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   // Use refs to prevent unnecessary re-renders
+  const meetingRef = useRef(null); 
   const participantRefreshTimeoutRef = useRef(null);
   const streamRestartTimeoutRef = useRef(null);
   const isValidatingRef = useRef(false);
@@ -34,11 +35,16 @@ const Preview = () => {
   const getActiveParticipants = useParticipantStore(
     (s) => s.getActiveParticipants
   );
+  const getParticipantsByCode = useParticipantStore(
+    (s) => s.getParticipantsByCode
+  );
 
   const { isConnected } = useWebSocketParticipants(
     code,
     joinCheckResult?.canJoin
   );
+
+  const getMeetingPreview = useParticipantStore((s) => s.getMeetingPreview);
 
   // Memoized debug log function
   const addDebugLog = useCallback((message) => {
@@ -82,7 +88,7 @@ const Preview = () => {
 
     try {
       console.log("Validating access to meeting:", code);
-      const result = await checkCanJoin(code);
+      const result = await checkCanJoin(code); // ✅ Perbaikan: definisikan result di sini
 
       if (!result.canJoin) {
         // Handle different error cases
@@ -107,18 +113,27 @@ const Preview = () => {
 
       console.log("Meeting access validated:", result.meeting);
 
-      // Fetch participants after successful validation
+      // ✅ Perbaikan: Fetch participants menggunakan meetingCode atau meetingId
       if (result.meeting?.meetingId) {
+        meetingRef.current = result.meeting.meetingId;
+        
         try {
+          // Coba fetch participants menggunakan meetingId
           await getActiveParticipants(result.meeting.meetingId);
-          console.log("Participants fetched for preview");
+          console.log("Participants fetched by meetingId for preview");
         } catch (participantError) {
-          console.warn(
-            "Failed to fetch participants for preview:",
-            participantError
-          );
+          console.warn("Failed to fetch participants by meetingId, trying by code:", participantError);
+          
+          // Fallback: coba fetch menggunakan meetingCode
+          try {
+            await getParticipantsByCode(code);
+            console.log("Participants fetched by meetingCode for preview");
+          } catch (fallbackError) {
+            console.warn("Failed to fetch participants by code as well:", fallbackError);
+          }
         }
       }
+
     } catch (error) {
       console.error("Meeting validation error:", error);
       message.error("Failed to validate meeting access");
@@ -126,7 +141,7 @@ const Preview = () => {
     } finally {
       isValidatingRef.current = false;
     }
-  }, [code, checkCanJoin, navigate, message, getActiveParticipants]);
+  }, [code, checkCanJoin, navigate, message, getActiveParticipants, getParticipantsByCode]);
 
   // Validate meeting code and check if user can join - ONLY ONCE
   useEffect(() => {
@@ -143,25 +158,49 @@ const Preview = () => {
   useEffect(() => {
     if (currentMeeting?.meetingId && !isValidatingRef.current) {
       console.log("Current meeting available, fetching participants...");
-      getActiveParticipants(currentMeeting.meetingId).catch((err) => {
-        console.warn("Failed to fetch participants:", err);
-      });
+      
+      const fetchParticipants = async () => {
+        try {
+          await getActiveParticipants(currentMeeting.meetingId);
+          console.log("Participants successfully fetched for current meeting");
+        } catch (err) {
+          console.warn("Failed to fetch participants by meetingId, trying by code...", err);
+          
+          // Fallback to fetching by code
+          if (code) {
+            try {
+              await getParticipantsByCode(code);
+              console.log("Participants fetched by code as fallback");
+            } catch (fallbackErr) {
+              console.warn("Failed to fetch participants by code as well:", fallbackErr);
+            }
+          }
+        }
+      };
+
+      fetchParticipants();
     }
-  }, [currentMeeting?.meetingId]); // Remove getActiveParticipants from deps
+  }, [currentMeeting?.meetingId, code]);
 
   // Periodically refresh participants list - STABLE INTERVAL
   useEffect(() => {
-    if (!currentMeeting?.meetingId) return;
+    if (!currentMeeting?.meetingId && !code) return;
 
     // Clear existing timeout
     if (participantRefreshTimeoutRef.current) {
       clearInterval(participantRefreshTimeoutRef.current);
     }
 
-    participantRefreshTimeoutRef.current = setInterval(() => {
-      getActiveParticipants(currentMeeting.meetingId).catch((err) => {
+    participantRefreshTimeoutRef.current = setInterval(async () => {
+      try {
+        if (currentMeeting?.meetingId) {
+          await getActiveParticipants(currentMeeting.meetingId);
+        } else if (code) {
+          await getParticipantsByCode(code);
+        }
+      } catch (err) {
         console.warn("Failed to refresh participants:", err);
-      });
+      }
     }, 10000); // Refresh every 10 seconds
 
     return () => {
@@ -169,7 +208,7 @@ const Preview = () => {
         clearInterval(participantRefreshTimeoutRef.current);
       }
     };
-  }, [currentMeeting?.meetingId]); // Remove getActiveParticipants from deps
+  }, [currentMeeting?.meetingId, code]);
 
   // Initialize ONLY ONCE on mount
   useEffect(() => {
@@ -226,7 +265,25 @@ const Preview = () => {
     selected.camera,
     selected.microphone,
     isInitialized,
-  ]); // Remove functions from deps
+  ]);
+useEffect(() => {
+  if (!code) return;
+
+  // Use getMeetingPreview instead for preview screen
+  const refreshPreview = async () => {
+    try {
+      await getMeetingPreview(code);
+    } catch (err) {
+      console.warn("Failed to refresh preview:", err);
+    }
+  };
+
+  // Refresh preview every 30 seconds (less frequent for preview)
+  const interval = setInterval(refreshPreview, 30000);
+  
+  return () => clearInterval(interval);
+}, [code, getMeetingPreview]);
+  
 
   const handleJoinNow = async () => {
     if (!code) {
@@ -261,6 +318,8 @@ const Preview = () => {
         // Refresh participants after joining
         if (currentMeeting?.meetingId) {
           await getActiveParticipants(currentMeeting.meetingId);
+        } else if (code) {
+          await getParticipantsByCode(code);
         }
 
         navigate(`/meeting/${code}`, {
