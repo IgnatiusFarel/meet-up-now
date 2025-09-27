@@ -76,6 +76,90 @@ export class MeetingController {
     }
   }
 
+  // Tambahkan method ini ke MeetingController.js Anda (setelah cleanupExpiredMeetings method)
+
+  /**
+   * Get meeting details by meetingId (untuk fallback strategy frontend)
+   * GET /api/meetings/details/:meetingId
+   */
+  static async getByMeetingId(req, res) {
+    try {
+      const { meetingId } = req.params;
+      const userId = req.user.userId;
+
+      console.log(`Getting meeting details for meetingId: ${meetingId}, user: ${userId}`);
+
+      if (!meetingId) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting ID is required!')
+        );
+      }
+
+      const meeting = await MeetingService.getByMeetingId(meetingId, userId);
+      
+      return res.status(200).json(
+        ApiResponse.success(meeting, 'Meeting details retrieved successfully!')
+      );
+    } catch (error) {
+      console.error('getByMeetingId error:', error);
+      
+      if (error.message === 'Meeting not found') {
+        return res.status(404).json(ApiResponse.notFound('Meeting not found!', 404));
+      }
+      if (error.message === 'Meeting has ended') {
+        return res.status(410).json(ApiResponse.error('Meeting has ended!', 410));
+      }
+      if (error.message === 'Not authorized') {
+        return res.status(403).json(ApiResponse.error('Not authorized to view this meeting!', 403));
+      }
+      
+      return res.status(500).json(
+        ApiResponse.error('Failed to retrieve meeting details!', 500, error.message)
+      );
+    }
+  }
+
+  /**
+   * Alternative method untuk get active users (jika dibutuhkan fallback)
+   * GET /api/meetings/:meetingId/active-users
+   */
+  static async getActiveUsers(req, res) {
+    try {
+      const { meetingId } = req.params;
+      const userId = req.user.userId;
+
+      console.log(`Getting active users for meetingId: ${meetingId}`);
+
+      if (!meetingId) {
+        return res.status(400).json(
+          ApiResponse.badRequest('Meeting ID is required!')
+        );
+      }
+
+      const activeUsers = await MeetingService.getActiveUsers(meetingId, userId);
+      
+      return res.status(200).json(
+        ApiResponse.success(activeUsers, 'Active users retrieved successfully!')
+      );
+    } catch (error) {
+      console.error('getActiveUsers error:', error);
+      
+      if (error.message === 'Meeting not found') {
+        return res.status(404).json(ApiResponse.notFound('Meeting not found!', 404));
+      }
+      if (error.message === 'Meeting has ended') {
+        return res.status(410).json(ApiResponse.error('Meeting has ended!', 410));
+      }
+      if (error.message === 'Not authorized') {
+        return res.status(403).json(ApiResponse.error('Not authorized!', 403));
+      }
+      
+      return res.status(500).json(
+        ApiResponse.error('Failed to retrieve active users!', 500, error.message)
+      );
+    }
+  }
+
   static async join(req, res) {
     try {
       const { code } = req.body;
