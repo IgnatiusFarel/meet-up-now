@@ -1,8 +1,8 @@
 import { Button } from "antd";
 import {
   StopIcon,
-  Squares2X2Icon,
   UserGroupIcon,
+  Squares2X2Icon,
   PaintBrushIcon,
   MicrophoneIcon,
   VideoCameraIcon,
@@ -10,11 +10,11 @@ import {
   VideoCameraSlashIcon,
   ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
-import { PhoneXMarkIcon } from "@heroicons/react/24/solid";
-import { MicrophoneSlashIcon } from "@sidekickicons/react/24/outline";
+import { useState, useEffect, useRef } from "react";
 import useMeetingStore from "@/stores/MeetingStore";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { PhoneXMarkIcon } from "@heroicons/react/24/solid";
+import { MicrophoneSlashIcon } from "@sidekickicons/react/24/outline";
 
 const ControlBar = ({
   micOn,
@@ -28,12 +28,13 @@ const ControlBar = ({
   activeSidebar,
   toggleSidebar,
   time,
-  meetingCode, // Add this prop to get meeting code from parent
+  meetingCode,
 }) => {
   const navigate = useNavigate();
   const params = useParams(); // Get URL params as fallback
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
   const [isFetchingMeeting, setIsFetchingMeeting] = useState(false);
+  const screenStreamRef = useRef(null);
 
   // Meeting store actions
   const currentMeeting = useMeetingStore((s) => s.currentMeeting);
@@ -110,26 +111,46 @@ const ControlBar = ({
     );
   };
 
-  /**
-   * Get current user ID - implement this based on your auth system
-   * @returns {string|number} Current user ID
-   */
   const getCurrentUserId = () => {
     // This should be implemented based on your authentication system
     // Examples:
     // return useAuthStore.getState().user?.id;
     // return localStorage.getItem('userId');
     // return JSON.parse(localStorage.getItem('user'))?.id;
-
-    // For now, returning null - you need to implement this
     return null;
+  };
+
+  const handleShareScreen = async () => {
+    if (shareScreen && screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+      setShareScreen(false);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+      });
+      screenStreamRef.current = stream;
+
+      setShareScreen(true);
+
+      // Optional: handle replacing tracks in WebRTC
+      stream.getVideoTracks()[0].onended = () => {
+        // User stopped from browser UI
+        setShareScreen(false);
+      };
+    } catch (error) {
+      console.error("Error starting screen share:", error);
+    }
   };
 
   /**
    * Handle end or leave meeting based on user role
    */
   const handleEndOrLeaveMeeting = async () => {
-    // If still fetching meeting data, wait or show message
     if (isFetchingMeeting) {
       console.log("Still fetching meeting data, please wait...");
       return;
@@ -138,18 +159,15 @@ const ControlBar = ({
     if (!currentMeeting) {
       console.error("No current meeting found");
 
-      // Try to navigate away gracefully
       const meetingId =
         currentMeeting?.meetingId ||
         currentMeeting?.id ||
         "f77a8839-30b2-44a8-a2bd-8db26bd7cdb0";
       if (meetingId) {
-        // If we have a code but no meeting data, try to fetch first
         console.log("Attempting to fetch meeting data before leaving...");
 
         try {
           await getMeetingByCode(meetingId);
-          // If successful, try again
           if (useMeetingStore.getState().currentMeeting) {
             return handleEndOrLeaveMeeting();
           }
@@ -158,7 +176,6 @@ const ControlBar = ({
         }
       }
 
-      // If still no meeting data, navigate to dashboard as fallback
       navigate("/dashboard");
       return;
     }
@@ -169,18 +186,14 @@ const ControlBar = ({
       const isOwner = isCurrentUserOwner();
 
       if (isOwner) {
-        // Owner ends the meeting
         console.log("Owner ending meeting...");
         await endMeeting(currentMeeting.id);
 
-        // Navigate directly to dashboard for owner
         navigate("/dashboard");
       } else {
-        // Regular user leaves the meeting
         console.log("User leaving meeting...");
         await leaveMeeting(currentMeeting.id);
 
-        // Navigate to exit page for non-owner users
         navigate("/exit", {
           state: {
             meetingCode: currentMeeting.code,
@@ -191,7 +204,6 @@ const ControlBar = ({
     } catch (error) {
       console.error("Error ending/leaving meeting:", error);
 
-      // Even if API call fails, still navigate away for better UX
       if (currentMeeting && isCurrentUserOwner()) {
         navigate("/dashboard");
       } else {
@@ -207,17 +219,12 @@ const ControlBar = ({
     }
   };
 
-  /**
-   * Get button text based on user role and loading states
-   * @returns {string} Button text
-   */
   const getEndButtonText = () => {
     if (isFetchingMeeting) return "Loading...";
     if (isEndingMeeting) {
       return isCurrentUserOwner() ? "Ending..." : "Leaving...";
     }
 
-    // If no meeting data, show generic text
     if (!currentMeeting) return "Leave";
 
     return isCurrentUserOwner() ? "End Meeting" : "Leave Meeting";
@@ -271,7 +278,7 @@ const ControlBar = ({
 
           {/* Share Screen */}
           <Button
-            onClick={() => setShareScreen(!shareScreen)}
+            onClick={handleShareScreen}
             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
               shareScreen
                 ? "bg-[#171717] group-hover:bg-[#2C2C2C] text-white"
