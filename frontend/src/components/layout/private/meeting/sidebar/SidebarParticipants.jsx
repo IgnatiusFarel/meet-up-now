@@ -15,8 +15,13 @@ const SidebarParticipants = ({ participants }) => {
           className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg"
         >
           <div className="flex items-center space-x-3">
-            <Avatar size={32} className="bg-blue-600">
-              {participant.name.charAt(0)}
+             <Avatar
+              size={32}
+              className="bg-blue-600"
+              src={participant.avatarUrl} // <— pakai avatarUrl di sini
+            >
+              {/* fallback kalau tidak ada avatarUrl */}
+              {participant.name?.charAt(0)}
             </Avatar>
             <div>
               <p className="text-sm font-medium">{participant.name}</p>
