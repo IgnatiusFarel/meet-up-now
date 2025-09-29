@@ -1,6 +1,6 @@
 // hooks/useWebSocketParticipants.js
 import { useEffect, useRef } from 'react';
-import socket from '@/Services/Socket'; // Use your existing socket instance
+import socket from '@/services/Socket'; 
 import useParticipantStore from '@/stores/ParticipantStore';
 import useAuthStore from '@/stores/AuthStore';
 
