@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import Api from "@/Services/Api.jsx";
+import Api from "@/services/Api.jsx";
 
 // ============ CONSTANTS ============
 const AUTH_CONSTANTS = {
