@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import Api from "@/Services/Api";
+import Api from "@/services/Api.jsx";
 
 const useParticipantStore = create(
   devtools(
