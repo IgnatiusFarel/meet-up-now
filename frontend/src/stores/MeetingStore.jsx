@@ -1,5 +1,5 @@
 // stores/MeetingStore.jsx
-import Api from "@/Services/Api";
+import Api from "@/services/Api.jsx";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
