@@ -1,6 +1,6 @@
 import { Button, Avatar } from "antd";
 import { useState } from "react";
-import useCurrentTime from "@/hooks/useCurrentTime";
+import useCurrentTime from "@/hooks/useCurrentTimejsx";
 import {
   StopIcon,
   Squares2X2Icon,

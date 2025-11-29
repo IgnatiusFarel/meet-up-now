@@ -3,9 +3,9 @@ import {
   PaintBrushIcon as PaintBrushSolidIcon,
   ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftSolidIcon,
 } from "@heroicons/react/24/solid";
-import SidebarParticipants from "./SidebarParticipants";
-import SidebarChat from "./SidebarChat";
-import SidebarArtboard from "./SidebarArtboard";
+import SidebarParticipants from "./SidebarParticipants.jsx";
+import SidebarChat from "./SidebarChat.jsx";
+import SidebarArtboard from "./SidebarArtboard.jsx";
 
 const Sidebar = ({ activeSidebar, toggleSidebar, participants }) => {
   if (!activeSidebar) return null;
