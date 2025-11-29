@@ -5,8 +5,8 @@ import StarBorder from "@/ui/StarBorder.jsx";
 import ChatImage from "@/assets/Chat.png";
 import GradientText from "@/ui/GradientText.jsx";
 import SpotlightCard from "@/ui/SpotlightCard.jsx";
-import ArtboardImage from "@/assets/artboard.png";
-import ReminderImage from "@/assets/reminder.png";
+import ArtboardImage from "@/assets/Artboard.png";
+import ReminderImage from "@/assets/Reminder.png";
 
 const Features = () => {
   return (
