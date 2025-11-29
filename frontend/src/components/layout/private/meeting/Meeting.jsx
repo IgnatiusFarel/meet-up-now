@@ -2,14 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { App } from "antd";
 import useCurrentTime from "@/hooks/useCurrentTime";
-import useMeetingStore from "@/stores/MeetingStore";
-import useParticipantStore from "@/stores/ParticipantStore";
-import useWebSocketParticipants from "@/hooks/useWebSocketParticipants";
-import useWebRTC from "@/hooks/useWebRTC";
-import useAuthStore from "@/stores/AuthStore";
-import ControlBar from "./ControlBar";
-import Sidebar from "./sidebar/Sidebar";
-import VideoArea from "./VideoArea";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
+import useParticipantStore from "@/stores/ParticipantStore.jsx";
+import useWebSocketParticipants from "@/hooks/useWebSocketParticipants.jsx";
+import useWebRTC from "@/hooks/useWebRTC.jsx";
+import useAuthStore from "@/stores/AuthStore.jsx";
+import ControlBar from "./ControlBar.jsx";
+import Sidebar from "./sidebar/Sidebar.jsx";
+import VideoArea from "./VideoArea.jsx";
 
 const Meeting = () => {
   const { code } = useParams();

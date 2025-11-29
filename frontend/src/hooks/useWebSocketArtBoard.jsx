@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
-import socket from "@/Services/Socket";
-import useMeetingStore from "@/stores/MeetingStore";
-import useAuthStore from "@/stores/AuthStore";
+import socket from "@/Services/Socket.jsx";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
+import useAuthStore from "@/stores/AuthStore.jsx";
 
 const useWebSocketArtBoard = ({ onDrawEvent, onEraseEvent, onClearEvent }) => {
   const socketRef = useRef(socket);

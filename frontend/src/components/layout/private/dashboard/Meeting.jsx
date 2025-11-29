@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { App, Input, Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
-import useMeetingStore from "@/stores/MeetingStore";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
 import { KeyIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 
 const Meeting = () => {

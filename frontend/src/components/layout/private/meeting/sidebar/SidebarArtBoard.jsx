@@ -2,8 +2,8 @@ import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import * as fabric from "fabric";
 import { EraserBrush } from "@erase2d/fabric";
-import useWebSocketArtBoard from "@/hooks/useWebSocketArtBoard";
-import useMeetingStore from "@/stores/MeetingStore";
+import useWebSocketArtBoard from "@/hooks/useWebSocketArtBoard.jsx";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
 
 const SidebarArtboard = () => {
   const canvasRef = useRef(null);

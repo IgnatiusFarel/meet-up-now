@@ -18,7 +18,7 @@ const SidebarParticipants = ({ participants }) => {
              <Avatar
               size={32}
               className="bg-blue-600"
-              src={participant.avatarUrl} // <— pakai avatarUrl di sini
+              src={participant.avatarUrl} 
             >
               {/* fallback kalau tidak ada avatarUrl */}
               {participant.name?.charAt(0)}

@@ -11,7 +11,7 @@ import {
   ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useRef } from "react";
-import useMeetingStore from "@/stores/MeetingStore";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import { PhoneXMarkIcon } from "@heroicons/react/24/solid";
 import { MicrophoneSlashIcon } from "@sidekickicons/react/24/outline";

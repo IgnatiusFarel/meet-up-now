@@ -1,13 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { App } from "antd";
 import { useEffect, useState, useCallback, useRef } from "react";
-import useMeetingStore from "@/stores/MeetingStore";
-import useParticipantStore from "@/stores/ParticipantStore";
-import useWebSocketParticipants from "@/hooks/useWebSocketParticipants";
-import useMediaDevices from "@/hooks/useMediaDevices";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
+import useParticipantStore from "@/stores/ParticipantStore.jsx";
+import useWebSocketParticipants from "@/hooks/useWebSocketParticipants.jsx";
+import useMediaDevices from "@/hooks/useMediaDevices.jsx";
 import Header from "./Header";
-import VideoPreview from "./VideoPreview";
-import JoinSection from "./JoinSection";
+import VideoPreview from "./VideoPreview.jsx";
+import JoinSection from "./JoinSection.jsx";
 
 const Preview = () => {
   const { code } = useParams();

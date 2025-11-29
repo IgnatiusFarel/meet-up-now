@@ -1,7 +1,7 @@
 import { Button, Input, message } from "antd";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import useChatStore from "@/stores/ChatStore";
-import useMeetingStore from "@/stores/MeetingStore";
+import useChatStore from "@/stores/ChatStore.jsx";
+import useMeetingStore from "@/stores/MeetingStore.jsx";
 import { useEffect, useState } from "react";
 
 const SidebarChat = ({ meetingId }) => {
