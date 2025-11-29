@@ -1,10 +1,10 @@
 import { Button } from "antd";
-import TextType from "@/ui/TextType";
-import SplitText from "@/ui/SplitText";
-import StarBorder from "@/ui/StarBorder";
-import ChatImage from "@/assets/chat.png";
-import GradientText from "@/ui/GradientText";
-import SpotlightCard from "@/ui/SpotlightCard";
+import TextType from "@/ui/TextType.jsx";
+import SplitText from "@/ui/SplitText.jsx";
+import StarBorder from "@/ui/StarBorder.jsx";
+import ChatImage from "@/assets/Chat.png";
+import GradientText from "@/ui/GradientText.jsx";
+import SpotlightCard from "@/ui/SpotlightCard.jsx";
 import ArtboardImage from "@/assets/artboard.png";
 import ReminderImage from "@/assets/reminder.png";
 
