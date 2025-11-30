@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import "dayjs/locale/en";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 
 const useCurrentTime = () => {
   const [time, setTime] = useState("");
