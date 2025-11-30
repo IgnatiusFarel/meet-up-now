@@ -1,6 +1,6 @@
 // hooks/useWebRTC.js
 import { useEffect, useRef, useCallback } from 'react';
-import socket from '@/Services/Socket';
+import socket from '@/Services/Socket.jsx';
 
 const useWebRTC = (meetingId, localStream, onRemoteStream, onParticipantLeft) => {
   const peerConnectionsRef = useRef(new Map());

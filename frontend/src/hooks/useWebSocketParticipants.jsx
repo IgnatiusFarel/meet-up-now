@@ -1,8 +1,8 @@
 // hooks/useWebSocketParticipants.js
 import { useEffect, useRef } from 'react';
-import socket from '@/services/Socket'; 
-import useParticipantStore from '@/stores/ParticipantStore';
-import useAuthStore from '@/stores/AuthStore';
+import socket from '@/services/Socket.jsx'; 
+import useParticipantStore from '@/stores/ParticipantStore.jsx';
+import useAuthStore from '@/stores/AuthStore.jsx';
 
 const useWebSocketParticipants = (meetingCode, isActive = true) => {
   const socketRef = useRef(socket);
