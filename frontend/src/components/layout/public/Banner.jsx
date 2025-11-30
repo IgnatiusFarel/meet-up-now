@@ -1,12 +1,12 @@
-import Login from "./auth/Login";
+import Login from "./auth/Login.jsx";
 import { Button, Modal } from "antd";
-import TextType from "@/ui/TextType";
-import ShinyText from "@/ui/ShinyText";
+import TextType from "@/ui/TextType.jsx";
+import ShinyText from "@/ui/ShinyText.jsx";
 import { useRef, useState } from "react";
-import StarBorder from "@/ui/StarBorder";
-import GradientText from "@/ui/GradientText";
-import PreviewImage from "@/assets/preview.png";
-import VariableProximity from "@/ui/VariableProximity";
+import StarBorder from "@/ui/StarBorder.jsx";
+import GradientText from "@/ui/GradientText.jsx";
+import PreviewImage from "@/assets/Preview.png";
+import VariableProximity from "@/ui/VariableProximity.jsx";
 
 const Banner = () => {
   const containerRef = useRef(null);

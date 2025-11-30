@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import useAuthStore from "@/stores/AuthStore";
+import useAuthStore from "@/stores/AuthStore.jsx";
 import { App } from "antd";
 
 const OAuthCallback = () => {

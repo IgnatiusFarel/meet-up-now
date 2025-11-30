@@ -1,9 +1,9 @@
 import { Button } from "antd";
-import TextType from "@/ui/TextType";
-import SplitText from "@/ui/SplitText";
-import StarBorder from "@/ui/StarBorder";
-import GradientText from "@/ui/GradientText";
-import InfiniteScroll from "@/ui/InfiniteScroll";
+import TextType from "@/ui/TextType.jsx";
+import SplitText from "@/ui/SplitText.jsx";
+import StarBorder from "@/ui/StarBorder.jsx";
+import GradientText from "@/ui/GradientText.jsx";
+import InfiniteScroll from "@/ui/InfiniteScroll.jsx";
 
 const testimonials = [
   {

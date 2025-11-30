@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useAuthStore from "@/stores/AuthStore";
+import useAuthStore from "@/stores/AuthStore.jsx";
 import { Button, message, Modal } from "antd";
 import MeetUpNow from "@/assets/MeetUpNow.png";
 

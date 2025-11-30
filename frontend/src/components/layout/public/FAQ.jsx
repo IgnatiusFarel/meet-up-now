@@ -1,8 +1,8 @@
 import { useState } from "react";
-import BlurText from "@/ui/BlurText";
-import ShinyText from "@/ui/ShinyText";
-import StarBorder from "@/ui/StarBorder";
-import FadeContent from "@/ui/FadeContent";
+import BlurText from "@/ui/BlurText.jsx";
+import ShinyText from "@/ui/ShinyText.jsx";
+import StarBorder from "@/ui/StarBorder.jsx";
+import FadeContent from "@/ui/FadeContent.jsx";
 import { Collapse, Segmented } from "antd";
 
 const faqData = {

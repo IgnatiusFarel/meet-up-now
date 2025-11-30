@@ -1,10 +1,10 @@
 import { Button } from "antd";
-import Login from "./auth/Login";
+import Login from "./auth/Login.jsx";
 import { useState } from "react";
-import GooeyNav from "@/ui/GooeyNav";
+import GooeyNav from "@/ui/GooeyNav.jsx";
 import { Link } from "react-router-dom";
 import MeetUpNow from "@/assets/MeetUpNow.png";
-import useActiveSection from "@/hooks/useActiveSection";
+import useActiveSection from "@/hooks/useActiveSection.jsx";
 
 const Navbar = () => {
   const sectionIds = ["home", "client", "testimonials", "features", "faq"];
