@@ -1,15 +1,15 @@
-import NotFoundPage from "@/pages/NotFoundPage";
+import NotFoundPage from "@/pages/NotFoundPage.jsx";
 import { useEffect, useState } from "react";
-import LandingPage from "@/pages/LandingPage"; 
-import useAuthStore from "@/stores/AuthStore";
-import Exit from "@/components/layout/private/exit/Exit";
+import LandingPage from "@/pages/LandingPage.jsx"; 
+import useAuthStore from "@/stores/AuthStore.jsx";
+import Exit from "@/components/layout/private/exit/Exit.jsx";
 // import Preview from "@/components/layout/private/Preview";
-import Meeting from "@/components/layout/private/meeting/Meeting";
+import Meeting from "@/components/layout/private/meeting/Meeting.jsx";
 // import Dashboard from "@/components/layout/private/Dashboard";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
-import OAuthCallback from "@/components/layout/public/auth/OAuthCallback";
-import DashboardPage from "../pages/DashboardPage";
-import PreviewPage from "../pages/PreviewPage";
+import OAuthCallback from "@/components/layout/public/auth/OAuthCallback.jsx";
+import DashboardPage from "../pages/DashboardPage.jsx";
+import PreviewPage from "../pages/PreviewPage.jsx";
 
 // ============ LOADING COMPONENT ============
 const LoadingSpinner = ({ message = "Loading..." }) => (

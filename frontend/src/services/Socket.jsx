@@ -1,6 +1,6 @@
 // Services/Socket.jsx - FIXED VERSION
 import { io } from "socket.io-client";
-import useAuthStore from "@/stores/AuthStore";
+import useAuthStore from "@/stores/AuthStore.jsx";
 
 const WS_URL = import.meta.env.VITE_APP_WS_URL || "http://localhost:3000";
 

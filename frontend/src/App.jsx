@@ -1,4 +1,4 @@
-import RoutesIndex from "./routes/RoutesIndex";
+import RoutesIndex from "./routes/RoutesIndex.jsx";
 
 function App() {  
   return (
