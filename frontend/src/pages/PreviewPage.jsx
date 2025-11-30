@@ -1,5 +1,5 @@
-import Preview from "@/components/layout/private/preview/Preview";
-import Header from "@/components/layout/private/preview/Header";
+import Preview from "@/components/layout/private/preview/Preview.jsx";
+import Header from "@/components/layout/private/preview/Header.jsx";
 
 const PreviewPage = () => {
   return (

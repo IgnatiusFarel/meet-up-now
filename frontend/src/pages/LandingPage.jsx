@@ -1,13 +1,13 @@
 import { Button } from "antd";
 import { useEffect, useState } from "react";
-import ElectricBorder from "@/ui/ElectricBorder";
-import Navbar from "@/components/layout/public/Navbar";
-import Banner from "@/components/layout/public/Banner";
-import Client from "@/components/layout/public/Client";
-import FAQ from "@/components/layout/public/FAQ";
-import Testimonials from "@/components/layout/public/Testimonials";
-import Features from "@/components/layout/public/Features";
-import Footer from "@/components/layout/public/Footer";
+import ElectricBorder from "@/ui/ElectricBorder.jsx";
+import Navbar from "@/components/layout/public/Navbar.jsx";
+import Banner from "@/components/layout/public/Banner.jsx";
+import Client from "@/components/layout/public/Client.jsx";
+import FAQ from "@/components/layout/public/FAQ.jsx";
+import Testimonials from "@/components/layout/public/Testimonials.jsx";
+import Features from "@/components/layout/public/Features.jsx";
+import Footer from "@/components/layout/public/Footer.jsx";
 
 const LandingPage = () => {
   const [showButtonUp, setShowButtonUp] = useState(false);

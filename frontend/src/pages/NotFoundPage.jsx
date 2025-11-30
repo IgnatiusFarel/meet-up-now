@@ -1,8 +1,8 @@
 import { Button } from "antd";
-import FuzzyText from "@/ui/FuzzyText";
-import ShinyText from "@/ui/ShinyText";
+import FuzzyText from "@/ui/FuzzyText.jsx";
+import ShinyText from "@/ui/ShinyText.jsx";
 import { useNavigate } from "react-router-dom";
-import ElectricBorder from "@/ui/ElectricBorder";
+import ElectricBorder from "@/ui/ElectricBorder.jsx";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 const NotFound = () => {

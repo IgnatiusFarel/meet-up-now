@@ -1,6 +1,6 @@
-import Header from "@/components/layout/private/dashboard/Header";
-import Meeting from "@/components/layout/private/dashboard/Meeting";
-import Carousels from "@/components/layout/private/dashboard/Carousels";
+import Header from "@/components/layout/private/dashboard/Header.jsx";
+import Meeting from "@/components/layout/private/dashboard/Meeting.jsx";
+import Carousels from "@/components/layout/private/dashboard/Carousels.jsx";
 
 const DashboardPage = () => {
   return (
