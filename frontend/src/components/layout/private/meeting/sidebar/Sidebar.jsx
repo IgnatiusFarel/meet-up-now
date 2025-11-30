@@ -3,9 +3,9 @@ import {
   PaintBrushIcon as PaintBrushSolidIcon,
   ChatBubbleOvalLeftIcon as ChatBubbleOvalLeftSolidIcon,
 } from "@heroicons/react/24/solid";
-import SidebarParticipants from "./SidebarParticipants.jsx";
 import SidebarChat from "./SidebarChat.jsx";
-import SidebarArtboard from "./SidebarArtboard.jsx";
+import SidebarArtBoard from "./SidebarArtBoard.jsx";
+import SidebarParticipants from "./SidebarParticipants.jsx";
 
 const Sidebar = ({ activeSidebar, toggleSidebar, participants }) => {
   if (!activeSidebar) return null;
@@ -22,7 +22,8 @@ const Sidebar = ({ activeSidebar, toggleSidebar, participants }) => {
               : "text-gray-600"
           }`}
         >
-          <UserGroupSolidIcon className="w-5 h-5" /> Participants ({participants.length})
+          <UserGroupSolidIcon className="w-5 h-5" /> Participants (
+          {participants.length})
         </button>
         <button
           onClick={() => toggleSidebar("chat")}
@@ -52,7 +53,7 @@ const Sidebar = ({ activeSidebar, toggleSidebar, participants }) => {
           <SidebarParticipants participants={participants} />
         )}
         {activeSidebar === "chat" && <SidebarChat />}
-        {activeSidebar === "artboard" && <SidebarArtboard />}
+        {activeSidebar === "artboard" && <SidebarArtBoard />}
       </div>
     </div>
   );
