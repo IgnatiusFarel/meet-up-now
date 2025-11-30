@@ -1,7 +1,7 @@
 import { Button } from "antd";
-import StatusInfo from "./StatusInfo";
-import DeviceSettings from "./DeviceSettings";
-import ParticipantsPreview from "./ParticipantsPreview";
+import StatusInfo from "./StatusInfo.jsx";
+import DeviceSettings from "./DeviceSettings.jsx";
+import ParticipantsPreview from "./ParticipantsPreview.jsx";
 
 const JoinSection = ({
   participants,

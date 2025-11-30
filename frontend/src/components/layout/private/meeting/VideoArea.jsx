@@ -1,4 +1,4 @@
-import ParticipantCard from "./ParticipantCard";
+import ParticipantCard from "./ParticipantCard.jsx";
 
 const VideoArea = ({
   viewMode,

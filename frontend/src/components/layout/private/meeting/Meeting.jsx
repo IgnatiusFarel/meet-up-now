@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { App } from "antd";
-import useCurrentTime from "@/hooks/useCurrentTime";
+import useCurrentTime from "@/hooks/useCurrentTime.jsx";
 import useMeetingStore from "@/stores/MeetingStore.jsx";
 import useParticipantStore from "@/stores/ParticipantStore.jsx";
 import useWebSocketParticipants from "@/hooks/useWebSocketParticipants.jsx";

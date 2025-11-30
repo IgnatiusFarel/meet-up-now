@@ -1,6 +1,6 @@
 import { Spin } from "antd";
-import MediaControls from "./MediaControls";
-import useAuthStore from "@/stores/AuthStore";
+import MediaControls from "./MediaControls.jsx";
+import useAuthStore from "@/stores/AuthStore.jsx";
 import {
   ArrowPathIcon,
   ExclamationTriangleIcon,

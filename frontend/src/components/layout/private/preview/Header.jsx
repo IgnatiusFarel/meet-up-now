@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { App, Avatar } from "antd";
-import useAuthStore from "@/stores/AuthStore";
+import useAuthStore from "@/stores/AuthStore.jsx";
 import MeetUpNow from "@/assets/MeetUpNow.png";
 import { UserOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";

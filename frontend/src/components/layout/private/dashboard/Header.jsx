@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { App, Avatar } from "antd";
-import useAuthStore from "@/stores/AuthStore";
+import useAuthStore from "@/stores/AuthStore.jsx";
 import MeetUpNow from "@/assets/MeetUpNow.png";
 import { UserOutlined } from "@ant-design/icons";
-import useCurrentTime from "@/hooks/useCurrentTime";
+import useCurrentTime from "@/hooks/useCurrentTime.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import {
   UserIcon,
